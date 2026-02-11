@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:do_it/common/app_pages.dart';
+//import 'package:do_it/common/app_pages.dart';
 //import 'package:do_it/modules/auth/session_controller.dart';
 import 'package:do_it/app/bindings/initial_binding.dart';
 import 'package:do_it/app/routes/app_routes.dart';
@@ -38,7 +38,7 @@ class KisanTradersApp extends StatelessWidget {
 
       initialBinding: InitialBinding(),
       initialRoute: AppRoutes.splash,
-      getPages: AppPages.routes,
+      getPages: AppRoutes.routes,
 
       theme: ThemeData(
         useMaterial3: true,

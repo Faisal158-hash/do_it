@@ -1,7 +1,6 @@
-// =======================
-// PRODUCT CARD UI (FIXED)
-// =======================
-
+import 'package:do_it/modules/products/product_model.dart';
+import 'package:do_it/modules/products/product_view.dart';
+import 'category_map.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

@@ -1,7 +1,6 @@
+import 'package:do_it/modules/products/product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// ignore: depend_on_referenced_packages
-//import 'package:get/get.dart'; // 🔹 Add this
 import '../../common/app_header.dart';
 import '../../common/app_footer.dart';
 import 'product_controller.dart';
@@ -33,9 +32,13 @@ class _ProductViewState extends State<ProductView> {
     return ChangeNotifierProvider(
       create: (_) => ProductController(),
       child: Scaffold(
-        appBar: const AppHeaderView(pageTitle: 'Products', cartCount: 3),
+        appBar: const AppHeaderView(
+          pageTitle: 'Products',
+          cartCount: 3, // you can connect this later dynamically
+        ),
         bottomNavigationBar: const AppFooter(),
         backgroundColor: const Color(0xFFF5F7F6),
+
         body: Consumer<ProductController>(
           builder: (context, controller, _) {
             final crossAxisCount = MediaQuery.of(context).size.width > 600
