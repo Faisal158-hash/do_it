@@ -1,48 +1,100 @@
+import 'package:do_it/modules/orders/orders_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-// ignore: depend_on_referenced_packages
-//import 'package:get/get.dart'; // 🔹 Add this
-import '../../common/app_header.dart';
-import '../../common/app_footer.dart';
-import 'orders_controller.dart';
-import 'order_card.dart';
-//import '../../modules/auth/session_controller.dart'; // 🔹 Add this
 
-class OrdersView extends StatelessWidget {
-  const OrdersView({super.key});
+class OrderPage extends StatefulWidget {
+  final String productId;
+
+  const OrderPage({super.key, required this.productId});
+
+  @override
+  State<OrderPage> createState() => _OrderPageState();
+}
+
+class _OrderPageState extends State<OrderPage> {
+  final controller = OrderController();
+  int quantity = 1;
 
   @override
   Widget build(BuildContext context) {
-    // 🔹 Inject SessionController
-    // final SessionController session = Get.find<SessionController>();
+    return Scaffold(
+      appBar: AppBar(title: const Text('Place Order')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: controller.nameController,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
 
-    // 🔹 Check login/session immediately when page opens
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   if (!session.isLoggedIn.value || session.showLoginPopup.value) {
-    //     session.requireLogin('/orders'); // 🔹 redirect after login
-    //   }
-    // });
+            TextField(
+              controller: controller.phoneController,
+              decoration: const InputDecoration(labelText: 'Phone'),
+            ),
 
-    return ChangeNotifierProvider(
-      create: (_) => OrdersController(),
-      child: Scaffold(
-        appBar: const AppHeaderView(pageTitle: 'Orders', ordersCount: 5),
-        bottomNavigationBar: const AppFooter(),
-        backgroundColor: Colors.green.shade50,
-        body: Consumer<OrdersController>(
-          builder: (_, controller, _) {
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: controller.orders.isEmpty
-                  ? const Center(child: Text('No orders yet'))
-                  : ListView.builder(
-                      itemCount: controller.orders.length,
-                      itemBuilder: (_, index) {
-                        return OrderCard(order: controller.orders[index]);
+            TextField(
+              controller: controller.addressController,
+              decoration: const InputDecoration(labelText: 'Address'),
+            ),
+
+            const SizedBox(height: 20),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Quantity"),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        if (quantity > 1) {
+                          setState(() => quantity--);
+                        }
                       },
+                      icon: const Icon(Icons.remove),
                     ),
-            );
-          },
+                    Text(quantity.toString()),
+                    IconButton(
+                      onPressed: () {
+                        setState(() => quantity++);
+                      },
+                      icon: const Icon(Icons.add),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 30),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final success = await controller.placeOrder(
+                    widget.productId,
+                    quantity,
+                  );
+
+                  if (!context.mounted) return;
+
+                  if (success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Order placed successfully"),
+                      ),
+                    );
+                    Navigator.pop(context);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Fill all fields")),
+                    );
+                  }
+                },
+                child: const Text("Place Order"),
+              ),
+            ),
+          ],
         ),
       ),
     );
