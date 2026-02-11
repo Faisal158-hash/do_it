@@ -1,58 +1,91 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../common/app_header.dart';
-import '../../common/app_footer.dart';
 import 'cart_controller.dart';
-import 'cart_item_card.dart';
-import 'cart_summary.dart';
-//import '../../modules/auth/session_controller.dart';
-// ignore: depend_on_referenced_packages
-//import 'package:get/get.dart';
 
-class CartView extends StatelessWidget {
-  const CartView({super.key});
+class CartPage extends StatefulWidget {
+  const CartPage({super.key});
+
+  @override
+  State<CartPage> createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  final controller = CartController();
+
+  Future<void> refresh() async {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
-    // final SessionController session = Get.find<SessionController>();
+    return Scaffold(
+      appBar: AppBar(title: const Text("My Cart"), centerTitle: true),
 
-    // 🔹 Check login/session immediately when page opens
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   if (!session.isLoggedIn.value || session.showLoginPopup.value) {
-    //     session.requireLogin('/cart'); // 🔹 Ensure redirect after login
-    //   }
-    // });
+      body: FutureBuilder(
+        future: controller.fetchCartItems(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-    return ChangeNotifierProvider(
-      create: (_) => CartController(),
-      child: Scaffold(
-        appBar: const AppHeaderView(pageTitle: 'My Cart', cartCount: 4),
-        bottomNavigationBar: const AppFooter(),
-        backgroundColor: Colors.green.shade50,
-        body: Consumer<CartController>(
-          builder: (_, controller, _) {
-            return Column(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: controller.cartItems.isEmpty
-                        ? const Center(child: Text('Cart is empty'))
-                        : ListView.builder(
-                            itemCount: controller.cartItems.length,
-                            itemBuilder: (_, index) {
-                              return CartItemCard(
-                                item: controller.cartItems[index],
-                              );
-                            },
-                          ),
+          if (!snapshot.hasData) {
+            return const Center(child: Text("No data found"));
+          }
+
+          final items = snapshot.data as List;
+
+          if (items.isEmpty) {
+            return const Center(
+              child: Text("Your cart is empty", style: TextStyle(fontSize: 18)),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(10),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+
+              /// joined Product table data
+              final product = item['Product'];
+
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      product['image_url'],
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+
+                  title: Text(
+                    product['name_en'],
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Price: Rs ${product['price']}"),
+                      Text("Quantity: ${item['quantity']}"),
+                    ],
+                  ),
+
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () async {
+                      await controller.removeItem(item['id']);
+                      refresh();
+                    },
                   ),
                 ),
-                CartSummary(total: controller.totalPrice),
-              ],
-            );
-          },
-        ),
+              );
+            },
+          );
+        },
       ),
     );
   }

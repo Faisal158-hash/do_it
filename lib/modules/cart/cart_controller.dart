@@ -1,25 +1,25 @@
-import 'package:flutter/material.dart';
+import 'package:do_it/modules/cart/card_service.dart';
 
-class CartController extends ChangeNotifier {
-  final List<Map<String, dynamic>> cartItems = [
-    {
-      'name': 'Khal',
-      'price': 100,
-      'quantity': 2,
-      'image': 'assets/images/khal.png',
-    },
-    {
-      'name': 'Chokar',
-      'price': 80,
-      'quantity': 1,
-      'image': 'assets/images/chokar.png',
-    },
-  ];
+import 'cart_model.dart';
 
-  int get totalPrice {
-    return cartItems.fold(
-      0,
-      (sum, item) => sum + (item['price'] * item['quantity'] as int),
-    );
+class CartController {
+  final CartService _service = CartService();
+
+  Future<void> addToCart(String productId, int quantity) async {
+    final item = CartModel(productId: productId, quantity: quantity);
+
+    await _service.addToCart(item);
+  }
+
+  Future<List<dynamic>> fetchCartItems() async {
+    return await _service.getCartItems();
+  }
+
+  Future<void> removeItem(String id) async {
+    await _service.removeFromCart(id);
+  }
+
+  Future<void> clearCart() async {
+    await _service.clearCart();
   }
 }

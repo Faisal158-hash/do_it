@@ -48,9 +48,9 @@ class AppRoutes {
     // Orders
     GetPage(
       name: orders,
-      page: () => const OrdersView(),
+      page: () => const OrderPage(productId: ''),
       binding: BindingsBuilder(() {
-        Get.put(OrdersController());
+        Get.put(OrderController());
       }),
     ),
 
