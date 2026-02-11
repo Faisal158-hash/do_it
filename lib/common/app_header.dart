@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:get/get.dart';
 import 'package:do_it/app/routes/app_routes.dart';
-//import 'package:do_it/modules/auth/session_controller.dart';
 
 const String kAppLogo = 'assets/images/logo.jpg';
 
@@ -20,64 +19,71 @@ class AppHeaderView extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final session = Get.find<SessionController>();
+    return AppBar(
+      backgroundColor: const Color(0xFF2E7D32),
 
-    // void navigate(String route, {bool requireLogin = false}) {
-    //   if (requireLogin && !session.isLoggedIn.value) {
-    //     session.requireLogin(route);
-    //     return;
-    //   }
-    //   session.redirectRoute = null;
-    //   if (Get.currentRoute != route) {
-    //     Get.toNamed(route);
-    //   }
-    // }
+      /// ✅ LOGO + TITLE
+      title: Row(
+        children: [
+          /// Logo
+          ClipRRect(
+            borderRadius: BorderRadius.zero, // makes it square
+            child: Image.asset(
+              kAppLogo,
+              height: 36,
+              width: 36,
+              fit: BoxFit.cover,
 
-    // // ignore: avoid_print
-    // print("Session exists: ${Get.isRegistered<SessionController>()}");
+              /// if logo not found → show icon instead
+              errorBuilder: (context, error, stackTrace) {
+                return const SizedBox(
+                  height: 36,
+                  width: 36,
+                  child: Icon(Icons.store, color: Colors.white),
+                );
+              },
+            ),
+          ),
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AppBar(
-          backgroundColor: const Color(0xFF2E7D32),
-          title: const Text('Kisan Traders'),
-          actions: [
-            Row(
-              children: [
-                NavItem(
-                  icon: Icons.home_outlined,
-                  label: 'Home',
-                  onTap: () => Get.toNamed(AppRoutes.home),
-                ),
-                NavItem(
-                  icon: Icons.storefront_outlined,
-                  label: 'Products',
-                  onTap: () => Get.toNamed(AppRoutes.product),
-                  //requireLogin: true
-                ),
-                NavItem(
-                  icon: Icons.receipt_long_outlined,
-                  label: 'Orders',
-                  onTap: () => Get.toNamed(AppRoutes.orders),
-                ),
-                NavItem(
-                  icon: Icons.shopping_cart_outlined,
-                  label: 'Cart',
-                  onTap: () => Get.toNamed(AppRoutes.cart),
-                  //requireLogin: true
-                ),
-                NavItem(
-                  icon: Icons.person_outline,
-                  label: 'Profile',
-                  onTap: () => Get.toNamed(AppRoutes.profile),
+          const SizedBox(width: 10),
 
-                  //requireLogin: true
-                ),
-              ],
+          /// Title
+          Text(pageTitle ?? 'Kisan Traders'),
+        ],
+      ),
+
+      /// Navigation menu
+      actions: [
+        Row(
+          children: [
+            NavItem(
+              icon: Icons.home_outlined,
+              label: 'Home',
+              onTap: () => Get.toNamed(AppRoutes.home),
+            ),
+            NavItem(
+              icon: Icons.storefront_outlined,
+              label: 'Products',
+              onTap: () => Get.toNamed(AppRoutes.product),
+            ),
+            NavItem(
+              icon: Icons.receipt_long_outlined,
+              label: 'Orders',
+              onTap: () => Get.toNamed(AppRoutes.orders),
+            ),
+            NavItem(
+              icon: Icons.shopping_cart_outlined,
+              label: 'Cart',
+              onTap: () => Get.toNamed(AppRoutes.cart),
+            ),
+            NavItem(
+              icon: Icons.person_outline,
+              label: 'Profile',
+              onTap: () => Get.toNamed(AppRoutes.profile),
             ),
           ],
         ),
+        const SizedBox(width: 10),
       ],
     );
   }

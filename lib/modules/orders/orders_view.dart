@@ -1,5 +1,6 @@
-import 'package:do_it/modules/orders/orders_controller.dart';
+import 'package:do_it/common/app_header.dart';
 import 'package:flutter/material.dart';
+import 'package:do_it/modules/orders/orders_controller.dart';
 
 class OrderPage extends StatefulWidget {
   final String productId;
@@ -17,7 +18,12 @@ class _OrderPageState extends State<OrderPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Place Order')),
+      // ✅ USING YOUR HEADER
+      appBar: const PreferredSize(
+        preferredSize: Size.fromHeight(60),
+        child: AppHeaderView(),
+      ),
+
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

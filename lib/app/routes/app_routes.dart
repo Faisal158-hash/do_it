@@ -39,7 +39,7 @@ class AppRoutes {
     // Cart
     GetPage(
       name: cart,
-      page: () => const CartView(),
+      page: () => const CartPage(),
       binding: BindingsBuilder(() {
         Get.put(CartController());
       }),

@@ -1,3 +1,4 @@
+import 'package:do_it/common/app_header.dart';
 import 'package:flutter/material.dart';
 import 'cart_controller.dart';
 
@@ -18,7 +19,8 @@ class _CartPageState extends State<CartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("My Cart"), centerTitle: true),
+      /// ✅ Using your custom header
+      appBar: const AppHeaderView(pageTitle: "My Cart"),
 
       body: FutureBuilder(
         future: controller.fetchCartItems(),
@@ -58,6 +60,8 @@ class _CartPageState extends State<CartPage> {
                       width: 60,
                       height: 60,
                       fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.image_not_supported),
                     ),
                   ),
 
