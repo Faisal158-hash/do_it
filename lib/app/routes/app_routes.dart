@@ -1,6 +1,5 @@
 // ignore: depend_on_referenced_packages
 import 'package:get/get.dart';
-
 import 'package:do_it/splash/splash_screen.dart';
 import 'package:do_it/modules/home/home_view.dart';
 import 'package:do_it/modules/products/product_view.dart';
@@ -35,7 +34,7 @@ class AppRoutes {
     ),
 
     // Products
-    GetPage(name: product, page: () => const ProductView()),
+    GetPage(name: product, page: () => const ProductView(product: null)),
 
     // Cart
     GetPage(
