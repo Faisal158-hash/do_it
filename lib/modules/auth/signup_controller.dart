@@ -1,49 +1,55 @@
-// // ignore: depend_on_referenced_packages
-// import 'package:get/get.dart';
-// import 'package:supabase_flutter/supabase_flutter.dart';
-// import 'session_controller.dart';
+import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
+import 'package:get/get.dart';
+import 'auth_controller.dart';
 
-// class SignupController extends GetxController {
-//   final SupabaseClient _supabase = Supabase.instance.client;
+class SignupController extends GetxController {
+  final nameController = TextEditingController();
+  final phoneController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
-//   // SAFE: ensure SessionController exists
-//   final SessionController session = Get.find<SessionController>();
+  final auth = Get.find<AuthController>();
 
-//   RxBool loading = false.obs;
-//   RxBool passwordVisible = false.obs;
+  var error = RxnString();
+  var isLoading = false.obs;
+  var hidePassword = true.obs;
 
-//   Future<void> signup(String email, String password, String name) async {
-//     if (loading.value) return;
-//     loading.value = true;
+  Future<bool> registerUser() async {
+    if (nameController.text.isEmpty ||
+        phoneController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        passwordController.text.isEmpty) {
+      error.value = "Please fill all fields";
+      return false;
+    }
 
-//     try {
-//       final res = await _supabase.auth.signUp(
-//         email: email.trim(),
-//         password: password,
-//       );
+    isLoading.value = true;
+    error.value = null;
 
-//       final user = res.user;
+    final msg = await auth.signup(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+      name: nameController.text.trim(),
+      phone: phoneController.text.trim(),
+    );
 
-//       if (user == null) {
-//         Get.snackbar("Signup Failed", "Account could not be created");
-//         return;
-//       }
+    isLoading.value = false;
 
-//       await _supabase.from('users').insert({
-//         'id': user.id,
-//         'email': email.trim(),
-//         'name': name.trim(),
-//       });
+    if (msg != null) {
+      error.value = msg;
+      return false;
+    }
 
-//       Get.snackbar("Success", "Account created successfully");
+    return true;
+  }
 
-//       // session.onAuthSuccess();
-//     } on AuthException catch (e) {
-//       Get.snackbar("Signup Failed", e.message);
-//     } catch (_) {
-//       Get.snackbar("Signup Failed", "Something went wrong");
-//     } finally {
-//       loading.value = false;
-//     }
-//   }
-// }
+  @override
+  void onClose() {
+    nameController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.onClose();
+  }
+}

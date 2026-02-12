@@ -1,103 +1,45 @@
-// // ignore: depend_on_referenced_packages
-// import 'package:do_it/app/routes/app_routes.dart';
-// // ignore: depend_on_referenced_packages
-// import 'package:get/get.dart';
-// import 'package:supabase_flutter/supabase_flutter.dart';
-// import 'session_controller.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'auth_controller.dart';
 
-// class LoginController extends GetxController {
-//   late final SessionController session;
+class LoginController extends GetxController {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
-//   RxBool loading = false.obs;
-//   RxBool passwordVisible = false.obs;
+  final auth = Get.find<AuthController>();
 
-//   @override
-//   void onInit() {
-//     super.onInit();
-//     session = Get.find<SessionController>();
-//   }
+  var error = RxnString();
+  var isLoading = false.obs;
+  var hidePassword = true.obs;
 
-//   Future<void> login(String email, String password) async {
-//     final res = await Supabase.instance.client.auth.signInWithPassword(
-//       email: email.trim(),
-//       password: password.trim(),
-//     );
+  Future<bool> loginUser() async {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      error.value = "Please fill all fields";
+      return false;
+    }
 
-//     if (res.session == null) {
-//       Get.snackbar('Error', 'Login failed');
-//       return;
-//     }
+    isLoading.value = true;
+    error.value = null;
 
-//     Get.find<SessionController>().setSession(res.session!);
+    final msg = await auth.login(
+      emailController.text.trim(),
+      passwordController.text.trim(),
+    );
 
-//     // ✅ NOW navigation is allowed
-//     Get.offAllNamed(AppRoutes.home);
-//   }
+    isLoading.value = false;
 
-//   // /// 🔹 LOGIN METHOD
-//   // Future<void> login(String email, String password) async {
-//   //   if (loading.value) return;
+    if (msg != null) {
+      error.value = msg;
+      return false;
+    }
 
-//   //   loading.value = true;
+    return true;
+  }
 
-//   //   try {
-//   //     final res = await _supabase.auth.signInWithPassword(
-//   //       email: email.trim(),
-//   //       password: password,
-//   //     );
-
-//   //     // ❌ Invalid credentials / no session
-//   //     if (res.session == null || res.user == null) {
-//   //       Get.snackbar(
-//   //         "Login Failed",
-//   //         "Incorrect email or password.",
-//   //         snackPosition: SnackPosition.TOP,
-//   //       );
-//   //       return;
-//   //     }
-
-//   //     // ✅ SUCCESS
-//   //     // session.onAuthSuccess();
-
-//   //     // Optional success message
-//   //     Get.snackbar(
-//   //       "Success",
-//   //       "Login successful",
-//   //       snackPosition: SnackPosition.TOP,
-//   //     );
-//   //   } on AuthException catch (e) {
-//   //     final message = e.message.toLowerCase();
-
-//   //     if (message.contains('invalid login credentials')) {
-//   //       Get.snackbar(
-//   //         "Login Failed",
-//   //         "Incorrect email or password.",
-//   //         snackPosition: SnackPosition.TOP,
-//   //       );
-//   //     } else if (message.contains('email not confirmed')) {
-//   //       Get.snackbar(
-//   //         "Login Failed",
-//   //         "Please verify your email before logging in.",
-//   //         snackPosition: SnackPosition.TOP,
-//   //       );
-//   //     } else {
-//   //       Get.snackbar(
-//   //         "Login Failed",
-//   //         e.message,
-//   //         snackPosition: SnackPosition.TOP,
-//   //       );
-//   //     }
-//   //   } catch (e, s) {
-//   //     // ✅ REAL error (very important)
-//   //     print("LOGIN UNEXPECTED ERROR: $e");
-//   //     print("STACK TRACE: $s");
-//   //     Get.snackbar(
-//   //       "Login Failed",
-//   //       e.toString(),
-//   //       snackPosition: SnackPosition.TOP,
-//   //     );
-//   //   } finally {
-//   //     loading.value = false;
-//   //   }
-//   // }
-// }
+  @override
+  void onClose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.onClose();
+  }
+}
