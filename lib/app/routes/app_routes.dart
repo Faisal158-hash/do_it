@@ -15,8 +15,8 @@ class AppRoutes {
   static const splash = '/splash';
   static const home = '/home';
   static const product = '/product';
-  static const cart = '/cart';
   static const orders = '/orders';
+  static const cart = '/cart';
   static const profile = '/profile';
 
   // GetX pages

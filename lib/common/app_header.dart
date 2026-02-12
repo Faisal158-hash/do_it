@@ -1,3 +1,5 @@
+import 'package:do_it/modules/auth/auth_controller.dart';
+import 'package:do_it/modules/auth/login_view.dart';
 import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:get/get.dart';
@@ -17,24 +19,41 @@ class AppHeaderView extends StatelessWidget implements PreferredSizeWidget {
     this.pageTitle,
   });
 
+  /// ⭐ AUTH CHECK BEFORE NAVIGATION
+  Future<void> navigateWithAuth(String route) async {
+    final auth = Get.find<AuthController>();
+
+    // if user not logged OR visit limit crossed
+    if (!auth.isLoggedIn.value || auth.shouldForceLogin()) {
+      final result = await Get.dialog(
+        const LoginPopup(),
+        barrierDismissible: false,
+      );
+
+      // if login success → go to page
+      if (result == true) {
+        Get.toNamed(route);
+      }
+    } else {
+      Get.toNamed(route);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: const Color(0xFF2E7D32),
 
-      /// ✅ LOGO + TITLE
+      /// LOGO + TITLE
       title: Row(
         children: [
-          /// Logo
           ClipRRect(
-            borderRadius: BorderRadius.zero, // makes it square
+            borderRadius: BorderRadius.zero,
             child: Image.asset(
               kAppLogo,
               height: 36,
               width: 36,
               fit: BoxFit.cover,
-
-              /// if logo not found → show icon instead
               errorBuilder: (context, error, stackTrace) {
                 return const SizedBox(
                   height: 36,
@@ -46,40 +65,42 @@ class AppHeaderView extends StatelessWidget implements PreferredSizeWidget {
           ),
 
           const SizedBox(width: 10),
-
-          /// Title
           Text(pageTitle ?? 'Kisan Traders'),
         ],
       ),
 
-      /// Navigation menu
+      /// NAVIGATION MENU
       actions: [
         Row(
           children: [
             NavItem(
               icon: Icons.home_outlined,
               label: 'Home',
-              onTap: () => Get.toNamed(AppRoutes.home),
+              onTap: () => navigateWithAuth(AppRoutes.home),
             ),
+
             NavItem(
               icon: Icons.storefront_outlined,
               label: 'Products',
-              onTap: () => Get.toNamed(AppRoutes.product),
+              onTap: () => navigateWithAuth(AppRoutes.product),
             ),
+
             NavItem(
               icon: Icons.receipt_long_outlined,
               label: 'Orders',
-              onTap: () => Get.toNamed(AppRoutes.orders),
+              onTap: () => navigateWithAuth(AppRoutes.orders),
             ),
+
             NavItem(
               icon: Icons.shopping_cart_outlined,
               label: 'Cart',
-              onTap: () => Get.toNamed(AppRoutes.cart),
+              onTap: () => navigateWithAuth(AppRoutes.cart),
             ),
+
             NavItem(
               icon: Icons.person_outline,
               label: 'Profile',
-              onTap: () => Get.toNamed(AppRoutes.profile),
+              onTap: () => navigateWithAuth(AppRoutes.profile),
             ),
           ],
         ),

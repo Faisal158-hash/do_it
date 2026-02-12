@@ -1,15 +1,17 @@
-// // ignore: depend_on_referenced_packages
-// import 'package:get/get.dart';
-// import 'session_controller.dart';
+import 'package:do_it/modules/auth/auth_controller.dart';
+import 'package:do_it/modules/auth/login_view.dart';
+// ignore: depend_on_referenced_packages
+import 'package:get/get.dart';
 
-// class AuthGuard {
-//   static void open(String routeName) {
-//     final session = Get.find<SessionController>();
+class AuthGuard {
+  static Future<bool> check() async {
+    final auth = Get.find<AuthController>();
 
-//     if (session.isLoggedIn.value) {
-//       Get.toNamed(routeName);
-//     } else {
-//       session.requireLogin(routeName);
-//     }
-//   }
-// }
+    if (!auth.isLoggedIn.value || auth.shouldForceLogin()) {
+      await Get.to(() => LoginPopup());
+      return auth.isLoggedIn.value;
+    }
+
+    return true;
+  }
+}

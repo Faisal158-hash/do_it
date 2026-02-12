@@ -1,177 +1,80 @@
-// import 'dart:ui';
-// import 'package:flutter/material.dart';
-// // ignore: depend_on_referenced_packages
-// import 'package:get/get.dart';
+import 'package:do_it/modules/auth/auth_controller.dart';
+import 'package:do_it/modules/auth/signup_view.dart';
+import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
+import 'package:get/get.dart';
 
-// import 'package:do_it/modules/auth/login_controller.dart';
-// import 'package:do_it/modules/auth/session_controller.dart';
+class LoginPopup extends StatefulWidget {
+  const LoginPopup({super.key});
 
-// class LoginPopup extends StatefulWidget {
-//   const LoginPopup({super.key});
+  @override
+  State<LoginPopup> createState() => _LoginPopupState();
+}
 
-//   @override
-//   State<LoginPopup> createState() => _LoginPopupState();
-// }
+class _LoginPopupState extends State<LoginPopup> {
+  final email = TextEditingController();
+  final password = TextEditingController();
+  final auth = Get.find<AuthController>();
 
-// class _LoginPopupState extends State<LoginPopup> {
-//   late final LoginController controller;
-//   late final SessionController session;
+  String? error;
 
-//   final TextEditingController email = TextEditingController();
-//   final TextEditingController password = TextEditingController();
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: const Color(0xFFE8F5E9),
 
-//   @override
-//   void initState() {
-//     super.initState();
+      title: const Text("Login", style: TextStyle(color: Color(0xFF2E7D32))),
 
-//     // ✅ Safe controller resolution
-//     controller = Get.isRegistered<LoginController>()
-//         ? Get.find<LoginController>()
-//         : Get.put(LoginController());
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: email,
+            decoration: const InputDecoration(labelText: "Email"),
+          ),
+          TextField(
+            controller: password,
+            obscureText: true,
+            decoration: const InputDecoration(labelText: "Password"),
+          ),
 
-//     session = Get.find<SessionController>();
-//   }
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(error!, style: const TextStyle(color: Colors.red)),
+            ),
 
-//   @override
-//   void dispose() {
-//     email.dispose();
-//     password.dispose();
-//     super.dispose();
-//   }
+          TextButton(
+            onPressed: () {
+              Get.back();
+              Get.dialog(const SignupPopup());
+            },
+            child: const Text("Register Account"),
+          ),
+        ],
+      ),
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Obx(() {
-//       if (!session.showLoginPopup.value) {
-//         return const SizedBox.shrink();
-//       }
+      actions: [
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2E7D32),
+          ),
+          onPressed: () async {
+            final msg = await auth.login(
+              email.text.trim(),
+              password.text.trim(),
+            );
 
-//       return Center(
-//         child: Material(
-//           color: Colors.black.withOpacity(0.4),
-//           child: BackdropFilter(
-//             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-//             child: SingleChildScrollView(
-//               child: Container(
-//                 width: 380,
-//                 padding: const EdgeInsets.all(24),
-//                 decoration: BoxDecoration(
-//                   gradient: LinearGradient(
-//                     colors: [
-//                       Colors.green.shade50.withOpacity(0.95),
-//                       Colors.green.shade100.withOpacity(0.9),
-//                     ],
-//                     begin: Alignment.topLeft,
-//                     end: Alignment.bottomRight,
-//                   ),
-//                   borderRadius: BorderRadius.circular(26),
-//                   boxShadow: const [
-//                     BoxShadow(
-//                       color: Colors.black26,
-//                       blurRadius: 25,
-//                       offset: Offset(0, 12),
-//                     ),
-//                   ],
-//                 ),
-//                 child: Column(
-//                   mainAxisSize: MainAxisSize.min,
-//                   children: [
-//                     const Text(
-//                       "Welcome Back 🌾",
-//                       style: TextStyle(
-//                         fontSize: 24,
-//                         fontWeight: FontWeight.bold,
-//                       ),
-//                     ),
-//                     const SizedBox(height: 6),
-//                     const Text(
-//                       "Login to Kisan Traders",
-//                       style: TextStyle(color: Colors.black54),
-//                     ),
-//                     const SizedBox(height: 25),
-
-//                     // Email
-//                     TextField(
-//                       controller: email,
-//                       keyboardType: TextInputType.emailAddress,
-//                       decoration: InputDecoration(
-//                         hintText: "Email address",
-//                         prefixIcon: const Icon(Icons.email_outlined),
-//                         filled: true,
-//                         fillColor: Colors.white,
-//                         border: OutlineInputBorder(
-//                           borderRadius: BorderRadius.circular(16),
-//                           borderSide: BorderSide.none,
-//                         ),
-//                       ),
-//                     ),
-//                     const SizedBox(height: 14),
-
-//                     // Password
-//                     TextField(
-//                       controller: password,
-//                       obscureText: !controller.passwordVisible.value,
-//                       decoration: InputDecoration(
-//                         hintText: "Password",
-//                         prefixIcon: const Icon(Icons.lock_outline),
-//                         suffixIcon: IconButton(
-//                           icon: Icon(
-//                             controller.passwordVisible.value
-//                                 ? Icons.visibility
-//                                 : Icons.visibility_off,
-//                           ),
-//                           onPressed: controller.passwordVisible.toggle,
-//                         ),
-//                         filled: true,
-//                         fillColor: Colors.white,
-//                         border: OutlineInputBorder(
-//                           borderRadius: BorderRadius.circular(16),
-//                           borderSide: BorderSide.none,
-//                         ),
-//                       ),
-//                     ),
-//                     const SizedBox(height: 26),
-
-//                     // Login button
-//                     SizedBox(
-//                       width: double.infinity,
-//                       height: 48,
-//                       child: ElevatedButton(
-//                         onPressed: controller.loading.value
-//                             ? null
-//                             : () async {
-//                                 await controller.login(
-//                                   email.text.trim(),
-//                                   password.text.trim(),
-//                                 );
-//                               },
-//                         child: controller.loading.value
-//                             ? const CircularProgressIndicator(
-//                                 strokeWidth: 2,
-//                                 color: Colors.white,
-//                               )
-//                             : const Text(
-//                                 "Login",
-//                                 style: TextStyle(fontWeight: FontWeight.bold),
-//                               ),
-//                       ),
-//                     ),
-//                     const SizedBox(height: 16),
-
-//                     // TextButton(
-//                     //   onPressed: session.openSignup,
-//                     //   child: const Text(
-//                     //     "Create new account",
-//                     //     style: TextStyle(fontWeight: FontWeight.w600),
-//                     //   ),
-//                     // ),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ),
-//         ),
-//       );
-//     });
-//   }
-// }
+            if (msg != null) {
+              setState(() => error = msg);
+            } else {
+              Get.back(result: true);
+            }
+          },
+          child: const Text("Login"),
+        ),
+      ],
+    );
+  }
+}
