@@ -15,14 +15,12 @@ class SignupPopup extends StatelessWidget {
 
       child: Center(
         child: Container(
-          width: 300, // ⭐ FIXED WIDTH
+          width: 300,
           padding: const EdgeInsets.all(22),
 
           decoration: BoxDecoration(
             color: const Color(0xFFE8F5E9),
             borderRadius: BorderRadius.circular(28),
-
-            /// ⭐ MODERN SHADOW
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(.12),
@@ -36,29 +34,18 @@ class SignupPopup extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                /// TOP BAR (TITLE + CLOSE)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                /// TITLE ONLY (NO CROSS BUTTON)
+                const Row(
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.person_add_alt_1, color: Color(0xFF2E7D32)),
-                        SizedBox(width: 8),
-                        Text(
-                          "Sign Up",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2E7D32),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    /// CLOSE BUTTON
-                    IconButton(
-                      onPressed: () => Get.back(),
-                      icon: const Icon(Icons.close),
+                    Icon(Icons.person_add_alt_1, color: Color(0xFF2E7D32)),
+                    SizedBox(width: 8),
+                    Text(
+                      "Sign Up",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2E7D32),
+                      ),
                     ),
                   ],
                 ),
@@ -185,7 +172,6 @@ class SignupPopup extends StatelessWidget {
     );
   }
 
-  /// ⭐ REUSABLE MODERN FIELD
   Widget _modernField({
     required TextEditingController controller,
     required String label,
@@ -199,7 +185,6 @@ class SignupPopup extends StatelessWidget {
     );
   }
 
-  /// ⭐ MODERN INPUT STYLE
   InputDecoration _fieldDecoration(
     String label,
     IconData icon, {
@@ -211,12 +196,10 @@ class SignupPopup extends StatelessWidget {
       suffixIcon: suffix,
       filled: true,
       fillColor: Colors.white.withOpacity(.8),
-
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide.none,
       ),
-
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5),
