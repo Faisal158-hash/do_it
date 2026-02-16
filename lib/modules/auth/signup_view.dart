@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'signup_controller.dart';
+import 'login_view.dart'; // ⭐ IMPORT LOGIN POPUP
 
 class SignupPopup extends StatelessWidget {
   const SignupPopup({super.key});
@@ -34,7 +35,7 @@ class SignupPopup extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                /// TITLE ONLY (NO CROSS BUTTON)
+                /// TITLE
                 const Row(
                   children: [
                     Icon(Icons.person_add_alt_1, color: Color(0xFF2E7D32)),
@@ -164,6 +165,17 @@ class SignupPopup extends StatelessWidget {
                     ),
                   ),
                 ),
+
+                /// ⭐ LOGIN NAVIGATION
+                const SizedBox(height: 10),
+
+                TextButton(
+                  onPressed: () {
+                    Get.back(); // close signup popup
+                    Get.dialog(const LoginPopup(), barrierDismissible: true);
+                  },
+                  child: const Text("Already have an account? Login"),
+                ),
               ],
             ),
           ),
@@ -172,6 +184,7 @@ class SignupPopup extends StatelessWidget {
     );
   }
 
+  /// REUSABLE FIELD
   Widget _modernField({
     required TextEditingController controller,
     required String label,
@@ -185,6 +198,7 @@ class SignupPopup extends StatelessWidget {
     );
   }
 
+  /// INPUT STYLE
   InputDecoration _fieldDecoration(
     String label,
     IconData icon, {
