@@ -55,6 +55,6 @@ class AppRoutes {
     ),
 
     // Profile
-    GetPage(name: profile, page: () => const ProfileView()),
+    GetPage(name: profile, page: () => ProfileView()),
   ];
 }

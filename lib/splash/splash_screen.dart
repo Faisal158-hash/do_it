@@ -14,6 +14,8 @@ class SplashView extends StatelessWidget {
       body: Container(
         width: double.infinity,
         height: double.infinity,
+
+        /// Gradient Background
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
@@ -21,10 +23,11 @@ class SplashView extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
         ),
+
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Animated Logo
+            /// ⭐ Animated Circular Logo
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: 1),
               duration: const Duration(seconds: 2),
@@ -34,14 +37,21 @@ class SplashView extends StatelessWidget {
                   child: Transform.scale(scale: value, child: child),
                 );
               },
-              child: Image.asset(
-                'assets/images/logo.jpg', // replace with your logo path
-                width: 120,
-                height: 120,
+
+              /// Circle Logo with Border
+              child: const CircleAvatar(
+                radius: 60,
+                backgroundColor: Colors.white, // border color
+                child: CircleAvatar(
+                  radius: 55,
+                  backgroundImage: AssetImage('assets/images/logo.jpg'),
+                ),
               ),
             ),
+
             const SizedBox(height: 30),
-            // App Name with animated text style
+
+            /// ⭐ Animated App Name
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: 1),
               duration: const Duration(seconds: 2),
@@ -49,7 +59,7 @@ class SplashView extends StatelessWidget {
                 return Opacity(
                   opacity: value,
                   child: Text(
-                    'Do It App',
+                    'Do It App', // change to "KISAN TRADERS" if needed
                     style: TextStyle(
                       fontSize: 28 + (value * 4),
                       fontWeight: FontWeight.bold,
@@ -57,7 +67,6 @@ class SplashView extends StatelessWidget {
                       letterSpacing: 1.2,
                       shadows: [
                         Shadow(
-                          // ignore: deprecated_member_use
                           color: Colors.black.withOpacity(0.2),
                           offset: const Offset(2, 2),
                           blurRadius: 4,
@@ -68,15 +77,16 @@ class SplashView extends StatelessWidget {
                 );
               },
             ),
+
             const SizedBox(height: 50),
-            // Circular Progress Indicator
+
+            /// ⭐ Loading Indicator
             SizedBox(
               width: 60,
               height: 60,
               child: CircularProgressIndicator(
                 strokeWidth: 6,
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                // ignore: deprecated_member_use
                 backgroundColor: Colors.white.withOpacity(0.3),
               ),
             ),

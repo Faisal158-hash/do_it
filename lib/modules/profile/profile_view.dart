@@ -1,4 +1,6 @@
+import 'package:do_it/common/app_header.dart';
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:get/get.dart';
 import 'profile_controller.dart';
 
@@ -27,6 +29,7 @@ class ProfileView extends StatelessWidget {
           return const Center(child: Text("No Profile Found"));
         }
 
+        // update text controllers
         nameController.text = profile.name;
         phoneController.text = profile.phone;
         addressController.text = profile.address;
@@ -36,27 +39,8 @@ class ProfileView extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              /// Profile Avatar
-              CircleAvatar(
-                radius: 50,
-                child: Text(
-                  profile.name.isNotEmpty ? profile.name[0].toUpperCase() : "U",
-                  style: const TextStyle(fontSize: 30),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              /// Email Card
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.email),
-                  title: Text(profile.email),
-                  subtitle: const Text("Email"),
-                ),
-              ),
-
-              const SizedBox(height: 20),
+              /// ✅ Header
+              AppHeaderView(),
 
               /// Editable Fields
               _buildTextField(nameController, "Name"),
