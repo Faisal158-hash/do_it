@@ -15,7 +15,9 @@ class SignupController extends GetxController {
   var isLoading = false.obs;
   var hidePassword = true.obs;
 
+  /// REGISTER USER
   Future<bool> registerUser() async {
+    // Validate fields
     if (nameController.text.isEmpty ||
         phoneController.text.isEmpty ||
         emailController.text.isEmpty ||
@@ -24,9 +26,11 @@ class SignupController extends GetxController {
       return false;
     }
 
+    // Start loading
     isLoading.value = true;
     error.value = null;
 
+    // Call AuthController signup
     final msg = await auth.signup(
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
@@ -34,6 +38,7 @@ class SignupController extends GetxController {
       phone: phoneController.text.trim(),
     );
 
+    // Stop loading
     isLoading.value = false;
 
     if (msg != null) {
@@ -41,7 +46,14 @@ class SignupController extends GetxController {
       return false;
     }
 
+    // ✅ Successful signup → user info is already set in AuthController
+    // Profile button will show automatically after signup
     return true;
+  }
+
+  /// OPTIONAL: Clear error when user types
+  void onFieldChanged() {
+    if (error.value != null) error.value = null;
   }
 
   @override

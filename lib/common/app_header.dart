@@ -41,6 +41,7 @@ class AppHeaderView extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = Get.find<AuthController>();
     return AppBar(
       backgroundColor: const Color(0xFF2E7D32),
 
@@ -97,10 +98,14 @@ class AppHeaderView extends StatelessWidget implements PreferredSizeWidget {
               onTap: () => navigateWithAuth(AppRoutes.cart),
             ),
 
-            NavItem(
-              icon: Icons.person_outline,
-              label: 'Profile',
-              onTap: () => navigateWithAuth(AppRoutes.profile),
+            /// ⭐ PROFILE BUTTON: ONLY SHOW IF LOGGED IN
+            Obx(() => auth.isLoggedIn.value
+                ? NavItem(
+                    icon: Icons.person_outline,
+                    label: 'Profile',
+                    onTap: () => navigateWithAuth(AppRoutes.profile),
+                  )
+                : const SizedBox.shrink() // hidden if not logged in
             ),
           ],
         ),
