@@ -1,4 +1,6 @@
 import 'package:do_it/common/app_header.dart';
+import 'package:do_it/common/temperature_widget.dart';
+import 'package:do_it/common/date_time_widget.dart';
 import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:get/get.dart';
@@ -17,69 +19,91 @@ class ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("My Profile"), centerTitle: true),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      backgroundColor: const Color.fromARGB(255, 7, 218, 148),
 
-        final profile = controller.profile.value;
+      /// ⭐ AppHeader like HomeView
+      appBar: const PreferredSize(
+        preferredSize: Size.fromHeight(60),
+        child: AppHeaderView(
+          pageTitle: 'My Profile',
+          cartCount: 0,
+          ordersCount: 0,
+        ),
+      ),
 
-        if (profile == null) {
-          return const Center(child: Text("No Profile Found"));
-        }
+      body: Stack(
+        children: [
+          Obx(() {
+            if (controller.isLoading.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-        // update text controllers
-        nameController.text = profile.name;
-        phoneController.text = profile.phone;
-        addressController.text = profile.address;
-        cityController.text = profile.city;
+            final profile = controller.profile.value;
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              /// ✅ Header
-              AppHeaderView(),
+            if (profile == null) {
+              return const Center(child: Text("No Profile Found"));
+            }
 
-              /// Editable Fields
-              _buildTextField(nameController, "Name"),
-              _buildTextField(phoneController, "Phone"),
-              _buildTextField(addressController, "Address"),
-              _buildTextField(cityController, "City"),
+            // update text controllers
+            nameController.text = profile.name;
+            phoneController.text = profile.phone;
+            addressController.text = profile.address;
+            cityController.text = profile.city;
 
-              const SizedBox(height: 20),
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
 
-              /// Update Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    controller.updateProfile(
-                      name: nameController.text,
-                      phone: phoneController.text,
-                      address: addressController.text,
-                      city: cityController.text,
-                    );
-                  },
-                  child: const Text("Update Profile"),
-                ),
+                  /// Editable Fields
+                  _buildTextField(nameController, "Name"),
+                  _buildTextField(phoneController, "Phone"),
+                  _buildTextField(addressController, "Address"),
+                  _buildTextField(cityController, "City"),
+
+                  const SizedBox(height: 20),
+
+                  /// Update Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        controller.updateProfile(
+                          name: nameController.text,
+                          phone: phoneController.text,
+                          address: addressController.text,
+                          city: cityController.text,
+                        );
+                      },
+                      child: const Text("Update Profile"),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  /// Logout Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: controller.logout,
+                      child: const Text("Logout"),
+                    ),
+                  ),
+
+                  const SizedBox(height: 120), // spacing for bottom widgets
+                ],
               ),
+            );
+          }),
 
-              const SizedBox(height: 10),
+          //  Temperature Widget (like HomeView)
+          Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
 
-              /// Logout Button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: controller.logout,
-                  child: const Text("Logout"),
-                ),
-              ),
-            ],
-          ),
-        );
-      }),
+          //  Date & Time Widget
+          const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
+        ],
+      ),
     );
   }
 
@@ -90,7 +114,11 @@ class ProfileView extends StatelessWidget {
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.9),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
     );

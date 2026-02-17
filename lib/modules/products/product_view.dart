@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../common/app_header.dart';
 import '../../common/app_footer.dart';
+import '../../common/temperature_widget.dart';
+import '../../common/date_time_widget.dart';
 import 'product_controller.dart';
 
 class ProductView extends StatefulWidget {
@@ -27,116 +29,127 @@ class _ProductViewState extends State<ProductView> {
         bottomNavigationBar: const AppFooter(),
         backgroundColor: const Color(0xFFF5F7F6),
 
-        body: Consumer<ProductController>(
-          builder: (context, controller, _) {
-            // =======================
-            // LOADING STATE
-            // =======================
-            if (controller.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        body: Stack(
+          children: [
+            Consumer<ProductController>(
+              builder: (context, controller, _) {
+                // =======================
+                // LOADING STATE
+                // =======================
+                if (controller.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-            final crossAxisCount = MediaQuery.of(context).size.width > 600
-                ? 4
-                : 2;
+                final crossAxisCount =
+                    MediaQuery.of(context).size.width > 600 ? 4 : 2;
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // =======================
-                  // SEARCH BAR
-                  // =======================
-                  Center(
-                    child: SizedBox(
-                      width: 600,
-                      child: TextField(
-                        onChanged: (value) {
-                          setState(() {
-                            searchQuery = value.toLowerCase();
-                          });
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Search products / مصنوعات تلاش کریں',
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color: Colors.green,
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide.none,
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // =======================
+                      // SEARCH BAR
+                      // =======================
+                      Center(
+                        child: SizedBox(
+                          width: 600,
+                          child: TextField(
+                            onChanged: (value) {
+                              setState(() {
+                                searchQuery = value.toLowerCase();
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Search products / مصنوعات تلاش کریں',
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                color: Colors.green,
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
 
-                  const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                  // =======================
-                  // CATEGORY SECTIONS
-                  // =======================
-                  ...controller.productsByCategory.entries.map((entry) {
-                    final categoryId = entry.key;
-                    final categoryTitle =
-                        controller.categories[categoryId] ?? '';
+                      // =======================
+                      // CATEGORY SECTIONS
+                      // =======================
+                      ...controller.productsByCategory.entries.map((entry) {
+                        final categoryId = entry.key;
+                        final categoryTitle =
+                            controller.categories[categoryId] ?? '';
 
-                    final filteredProducts = entry.value.where((product) {
-                      return product.nameEn.toLowerCase().contains(
-                            searchQuery,
-                          ) ||
-                          product.nameUr.toLowerCase().contains(searchQuery);
-                    }).toList();
+                        final filteredProducts = entry.value.where((product) {
+                          return product.nameEn
+                                  .toLowerCase()
+                                  .contains(searchQuery) ||
+                              product.nameUr
+                                  .toLowerCase()
+                                  .contains(searchQuery);
+                        }).toList();
 
-                    if (filteredProducts.isEmpty) {
-                      return const SizedBox();
-                    }
+                        if (filteredProducts.isEmpty) {
+                          return const SizedBox();
+                        }
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // CATEGORY TITLE
-                        Text(
-                          categoryTitle,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2E7D32),
-                          ),
-                        ),
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // CATEGORY TITLE
+                            Text(
+                              categoryTitle,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2E7D32),
+                              ),
+                            ),
 
-                        const SizedBox(height: 12),
+                            const SizedBox(height: 12),
 
-                        // PRODUCTS GRID
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
+                            // PRODUCTS GRID
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: crossAxisCount,
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
                               ),
-                          itemCount: filteredProducts.length,
-                          itemBuilder: (_, index) {
-                            return ProductCardPage(
-                              product: filteredProducts[index],
-                              categoryId: '',
-                            );
-                          },
-                        ),
+                              itemCount: filteredProducts.length,
+                              itemBuilder: (_, index) {
+                                return ProductCardPage(
+                                  product: filteredProducts[index],
+                                  categoryId: '',
+                                );
+                              },
+                            ),
 
-                        const SizedBox(height: 24),
-                      ],
-                    );
-                  }),
-                ],
-              ),
-            );
-          },
+                            const SizedBox(height: 24),
+                          ],
+                        );
+                      }),
+                    ],
+                  ),
+                );
+              },
+            ),
+
+            // =======================
+            // TEMPERATURE & DATE/TIME WIDGETS
+            // =======================
+             Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
+            const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
+          ],
         ),
       ),
     );

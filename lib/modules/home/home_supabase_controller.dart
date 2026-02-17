@@ -28,10 +28,17 @@ class HomeSupabaseController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchHomeData();
+    fetchAll(); // ⭐ unified method
   }
 
-  // ---------------- MASTER FETCH ----------------
+  // =====================================================
+  // ⭐ MASTER FETCH (used by HomeView)
+  // =====================================================
+
+  Future<void> fetchAll() async {
+    await fetchHomeData();
+  }
+
   Future<void> fetchHomeData() async {
     try {
       isLoading.value = true;
@@ -44,25 +51,35 @@ class HomeSupabaseController extends GetxController {
         fetchBlogs(),
       ]);
     } catch (e) {
-      // ignore: avoid_print
-      print('Home data error: $e');
+      print("Home data error: $e");
     } finally {
       isLoading.value = false;
     }
   }
 
-  // ---------------- HERO BANNERS ----------------
-  Future<void> fetchBanners() async {
-    final response = await _supabase
-        .from('home_banners')
-        .select()
-        .eq('is_active', true)
-        .order('order_no');
+  // =====================================================
+  // HERO BANNERS
+  // =====================================================
 
-    banners.value = List<Map<String, dynamic>>.from(response);
+  Future<void> fetchBanners() async {
+    try {
+      final response = await _supabase
+          .from('home_banners')
+          .select()
+          .eq('is_active', true)
+          .order('order_no');
+
+      banners.value = List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print("Banner error: $e");
+      banners.clear();
+    }
   }
 
-  // ---------------- CATEGORIES ----------------
+  // =====================================================
+  // CATEGORIES
+  // =====================================================
+
   Future<void> fetchCategories() async {
     try {
       final response = await _supabase
@@ -71,43 +88,54 @@ class HomeSupabaseController extends GetxController {
           .eq('is_active', true)
           .order('order_no', ascending: true);
 
-      // Make sure response is not null
-      // ignore: unnecessary_null_comparison
-      if (response != null) {
-        categories.value = List<Map<String, dynamic>>.from(response);
-        // ignore: dead_code
-      } else {
-        categories.clear();
-      }
+      categories.value = List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      // ignore: avoid_print
-      print('Error fetching categories: $e');
+      print("Categories error: $e");
       categories.clear();
     }
   }
 
-  // ---------------- FEATURED PRODUCTS ----------------
+  // =====================================================
+  // FEATURED PRODUCTS
+  // =====================================================
+
   Future<void> fetchFeaturedProducts() async {
-    final response = await _supabase
-        .from('featured_products')
-        .select()
-        .eq('is_featured', true)
-        .limit(10);
+    try {
+      final response = await _supabase
+          .from('featured_products')
+          .select()
+          .eq('is_featured', true)
+          .limit(10);
 
-    featuredProducts.value = List<Map<String, dynamic>>.from(response);
+      featuredProducts.value = List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print("Featured products error: $e");
+      featuredProducts.clear();
+    }
   }
 
-  // ---------------- MARKET RATES ----------------
+  // =====================================================
+  // MARKET RATES
+  // =====================================================
+
   Future<void> fetchMarketRates() async {
-    final response = await _supabase
-        .from('market_rates')
-        .select()
-        .order('updated_at', ascending: false);
+    try {
+      final response = await _supabase
+          .from('market_rates')
+          .select()
+          .order('updated_at', ascending: false);
 
-    marketRates.value = List<Map<String, dynamic>>.from(response);
+      marketRates.value = List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print("Market rates error: $e");
+      marketRates.clear();
+    }
   }
 
-  // ---------------- BLOGS ----------------
+  // =====================================================
+  // BLOGS
+  // =====================================================
+
   Future<void> fetchBlogs() async {
     try {
       final response = await _supabase
@@ -118,8 +146,16 @@ class HomeSupabaseController extends GetxController {
 
       blogs.value = List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      // ignore: avoid_print
-      print('Error fetching blogs: $e');
+      print("Blogs error: $e");
+      blogs.clear();
     }
+  }
+
+  // =====================================================
+  // ⭐ OPTIONAL: Pull-to-refresh support
+  // =====================================================
+
+  Future<void> refreshData() async {
+    await fetchAll();
   }
 }

@@ -33,7 +33,7 @@ class LoginPopup extends StatelessWidget {
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
 
               child: Container(
-                width: 320,
+                width: 350,
                 padding: const EdgeInsets.all(24),
 
                 decoration: BoxDecoration(
@@ -162,8 +162,9 @@ class LoginPopup extends StatelessWidget {
                               onPressed: controller.isLoading.value
                                   ? null
                                   : () async {
-                                      if (!formKey.currentState!.validate())
+                                      if (!formKey.currentState!.validate()) {
                                         return;
+                                      }
 
                                       final success = await controller
                                           .loginUser();

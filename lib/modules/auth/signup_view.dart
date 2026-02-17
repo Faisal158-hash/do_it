@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:get/get.dart';
 import 'signup_controller.dart';
 import 'login_view.dart';
@@ -33,9 +34,8 @@ class SignupPopup extends StatelessWidget {
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
 
               child: Container(
-                width: 320,
+                width: 350,
                 padding: const EdgeInsets.all(24),
-
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(.85),
                   borderRadius: BorderRadius.circular(30),
@@ -48,7 +48,6 @@ class SignupPopup extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 child: SingleChildScrollView(
                   child: Form(
                     key: formKey,
@@ -61,9 +60,7 @@ class SignupPopup extends StatelessWidget {
                           size: 45,
                           color: Color(0xFF2E7D32),
                         ),
-
                         const SizedBox(height: 10),
-
                         const Text(
                           "Create Account",
                           style: TextStyle(
@@ -72,14 +69,11 @@ class SignupPopup extends StatelessWidget {
                             color: Color(0xFF2E7D32),
                           ),
                         ),
-
                         const SizedBox(height: 4),
-
                         Text(
                           "Sign up to continue",
                           style: TextStyle(color: Colors.grey.shade600),
                         ),
-
                         const SizedBox(height: 25),
 
                         /// FULL NAME
@@ -196,8 +190,9 @@ class SignupPopup extends StatelessWidget {
                               onPressed: controller.isLoading.value
                                   ? null
                                   : () async {
-                                      if (!formKey.currentState!.validate())
+                                      if (!formKey.currentState!.validate()) {
                                         return;
+                                      }
 
                                       final success = await controller
                                           .registerUser();
