@@ -1,4 +1,5 @@
 import 'package:do_it/common/app_header.dart';
+import 'package:do_it/common/app_footer.dart';
 import 'package:flutter/material.dart';
 import 'cart_controller.dart';
 import '../../common/temperature_widget.dart';
@@ -21,11 +22,24 @@ class _CartPageState extends State<CartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      /// ✅ Using your custom header
-      appBar: const AppHeaderView(pageTitle: "My Cart"),
+      /// ✅ Same Header Style
+      appBar: const AppHeaderView(
+        pageTitle: "My Cart",
+        cartCount: 0,
+        ordersCount: 0,
+      ),
+
+      /// ✅ Footer Added (Same as HomeView)
+      bottomNavigationBar: const AppFooter(),
+
+      /// ✅ Same Background Color as HomeView
+      backgroundColor: const Color(0xFFF5F5F5),
 
       body: Stack(
         children: [
+          /// =======================
+          /// CART ITEMS
+          /// =======================
           FutureBuilder(
             future: controller.fetchCartItems(),
             builder: (context, snapshot) {
@@ -71,12 +85,10 @@ class _CartPageState extends State<CartPage> {
                               const Icon(Icons.image_not_supported),
                         ),
                       ),
-
                       title: Text(
                         product['name_en'],
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -84,7 +96,6 @@ class _CartPageState extends State<CartPage> {
                           Text("Quantity: ${item['quantity']}"),
                         ],
                       ),
-
                       trailing: IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () async {
@@ -100,9 +111,9 @@ class _CartPageState extends State<CartPage> {
           ),
 
           /// =======================
-          /// TEMPERATURE & DATE/TIME WIDGETS
+          /// FLOATING WIDGETS
           /// =======================
-           Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
+          Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
           const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
       ),

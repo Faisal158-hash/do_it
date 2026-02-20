@@ -1,4 +1,5 @@
 import 'package:do_it/common/app_header.dart';
+import 'package:do_it/common/app_footer.dart';
 import 'package:do_it/common/temperature_widget.dart';
 import 'package:do_it/common/date_time_widget.dart';
 import 'package:flutter/material.dart';
@@ -19,17 +20,18 @@ class ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      /// ✅ Same background style (can keep your color if intentional)
       backgroundColor: const Color.fromARGB(255, 7, 218, 148),
 
-      /// ⭐ AppHeader like HomeView
-      appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(60),
-        child: AppHeaderView(
-          pageTitle: 'My Profile',
-          cartCount: 0,
-          ordersCount: 0,
-        ),
+      /// ⭐ Same Header Style
+      appBar: const AppHeaderView(
+        pageTitle: 'My Profile',
+        cartCount: 0,
+        ordersCount: 0,
       ),
+
+      /// ✅ Footer Added (same as HomeView)
+      bottomNavigationBar: const AppFooter(),
 
       body: Stack(
         children: [
@@ -44,7 +46,7 @@ class ProfileView extends StatelessWidget {
               return const Center(child: Text("No Profile Found"));
             }
 
-            // update text controllers
+            /// update text controllers
             nameController.text = profile.name;
             phoneController.text = profile.phone;
             addressController.text = profile.address;
@@ -91,16 +93,16 @@ class ProfileView extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 120), // spacing for bottom widgets
+                  const SizedBox(height: 120),
                 ],
               ),
             );
           }),
 
-          //  Temperature Widget (like HomeView)
+          /// ⭐ Temperature Widget
           Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
 
-          //  Date & Time Widget
+          /// ⭐ Date & Time Widget
           const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
       ),

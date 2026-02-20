@@ -1,4 +1,5 @@
 import 'package:do_it/common/app_header.dart';
+import 'package:do_it/common/app_footer.dart';
 import 'package:do_it/common/temperature_widget.dart';
 import 'package:do_it/common/date_time_widget.dart';
 import 'package:flutter/material.dart';
@@ -20,40 +21,75 @@ class _OrderPageState extends State<OrderPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ⭐ Using AppHeader like HomeView
-      appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(60),
-        child: AppHeaderView(),
+      /// ⭐ Same Header Style as HomeView
+      appBar: const AppHeaderView(
+        pageTitle: 'Orders',
+        cartCount: 0,
+        ordersCount: 0,
       ),
+
+      /// ⭐ Added Footer (Same as HomeView)
+      bottomNavigationBar: const AppFooter(),
+
+      /// ⭐ Same background as HomeView
+      backgroundColor: const Color(0xFFF5F5F5),
 
       body: Stack(
         children: [
+          /// Scrollable Content
           Padding(
             padding: const EdgeInsets.all(16),
             child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 children: [
+                  /// Name
                   TextField(
                     controller: controller.nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
+                    decoration: const InputDecoration(
+                      labelText: 'Name',
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
                   ),
 
+                  const SizedBox(height: 12),
+
+                  /// Phone
                   TextField(
                     controller: controller.phoneController,
-                    decoration: const InputDecoration(labelText: 'Phone'),
+                    decoration: const InputDecoration(
+                      labelText: 'Phone',
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
                   ),
 
+                  const SizedBox(height: 12),
+
+                  /// Address
                   TextField(
                     controller: controller.addressController,
-                    decoration: const InputDecoration(labelText: 'Address'),
+                    decoration: const InputDecoration(
+                      labelText: 'Address',
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
                   ),
 
                   const SizedBox(height: 20),
 
+                  /// Quantity Selector
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Quantity"),
+                      const Text(
+                        "Quantity",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       Row(
                         children: [
                           IconButton(
@@ -64,7 +100,10 @@ class _OrderPageState extends State<OrderPage> {
                             },
                             icon: const Icon(Icons.remove),
                           ),
-                          Text(quantity.toString()),
+                          Text(
+                            quantity.toString(),
+                            style: const TextStyle(fontSize: 16),
+                          ),
                           IconButton(
                             onPressed: () {
                               setState(() => quantity++);
@@ -78,6 +117,7 @@ class _OrderPageState extends State<OrderPage> {
 
                   const SizedBox(height: 30),
 
+                  /// Place Order Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -106,16 +146,16 @@ class _OrderPageState extends State<OrderPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 120), // spacing for floating widgets
+                  const SizedBox(height: 120),
                 ],
               ),
             ),
           ),
 
-          /// ⭐ Temperature Widget at bottom-right
+          /// ⭐ Temperature Widget
           Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
 
-          /// ⭐ Date & Time Widget above Temperature
+          /// ⭐ Date & Time Widget
           const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
       ),

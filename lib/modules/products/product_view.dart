@@ -22,20 +22,26 @@ class _ProductViewState extends State<ProductView> {
     return ChangeNotifierProvider(
       create: (_) => ProductController(),
       child: Scaffold(
+        /// Header (same style as HomeView)
         appBar: const AppHeaderView(
           pageTitle: 'Products',
-          cartCount: 3, // you can connect this later dynamically
+          cartCount: 3,
+          ordersCount: 0,
         ),
+
+        /// Footer
         bottomNavigationBar: const AppFooter(),
-        backgroundColor: const Color(0xFFF5F7F6),
+
+        /// Background
+        backgroundColor: const Color(0xFFF5F5F5),
 
         body: Stack(
           children: [
+            /// =======================
+            /// MAIN CONTENT
+            /// =======================
             Consumer<ProductController>(
               builder: (context, controller, _) {
-                // =======================
-                // LOADING STATE
-                // =======================
                 if (controller.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -48,9 +54,7 @@ class _ProductViewState extends State<ProductView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // =======================
-                      // SEARCH BAR
-                      // =======================
+                      /// SEARCH BAR
                       Center(
                         child: SizedBox(
                           width: 600,
@@ -79,9 +83,7 @@ class _ProductViewState extends State<ProductView> {
 
                       const SizedBox(height: 24),
 
-                      // =======================
-                      // CATEGORY SECTIONS
-                      // =======================
+                      /// CATEGORY SECTIONS
                       ...controller.productsByCategory.entries.map((entry) {
                         final categoryId = entry.key;
                         final categoryTitle =
@@ -103,7 +105,7 @@ class _ProductViewState extends State<ProductView> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // CATEGORY TITLE
+                            /// CATEGORY TITLE
                             Text(
                               categoryTitle,
                               style: const TextStyle(
@@ -115,7 +117,7 @@ class _ProductViewState extends State<ProductView> {
 
                             const SizedBox(height: 12),
 
-                            // PRODUCTS GRID
+                            /// PRODUCTS GRID
                             GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
@@ -138,17 +140,39 @@ class _ProductViewState extends State<ProductView> {
                           ],
                         );
                       }),
+
+                      /// spacing for floating widgets
+                      const SizedBox(height: 120),
                     ],
                   ),
                 );
               },
             ),
 
-            // =======================
-            // TEMPERATURE & DATE/TIME WIDGETS
-            // =======================
-             Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
-            const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
+            /// =======================
+            /// FLOATING WIDGETS (CORRECT POSITION)
+            /// =======================
+            SafeArea(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 20, bottom: 60),
+                      child: TemperatureWidget(),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 20, bottom: 20),
+                      child: const DateTimeWidget(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
