@@ -3,13 +3,17 @@ import 'package:do_it/common/app_footer.dart';
 import 'package:do_it/common/temperature_widget.dart';
 import 'package:do_it/common/date_time_widget.dart';
 import 'package:flutter/material.dart';
-// ignore: depend_on_referenced_packages
 import 'package:get/get.dart';
 import 'profile_controller.dart';
 
-class ProfileView extends StatelessWidget {
-  ProfileView({super.key});
+class ProfileView extends StatefulWidget {
+  const ProfileView({super.key});
 
+  @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> {
   final controller = Get.put(ProfileController());
 
   final nameController = TextEditingController();
@@ -17,20 +21,21 @@ class ProfileView extends StatelessWidget {
   final addressController = TextEditingController();
   final cityController = TextEditingController();
 
+  bool isInitialized = false; // prevents text reset while typing
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      /// ✅ Same background style (can keep your color if intentional)
       backgroundColor: const Color.fromARGB(255, 7, 218, 148),
 
-      /// ⭐ Same Header Style
+      /// HEADER
       appBar: const AppHeaderView(
         pageTitle: 'My Profile',
         cartCount: 0,
         ordersCount: 0,
       ),
 
-      /// ✅ Footer Added (same as HomeView)
+      /// FOOTER
       bottomNavigationBar: const AppFooter(),
 
       body: Stack(
@@ -46,11 +51,14 @@ class ProfileView extends StatelessWidget {
               return const Center(child: Text("No Profile Found"));
             }
 
-            /// update text controllers
-            nameController.text = profile.name;
-            phoneController.text = profile.phone;
-            addressController.text = profile.address;
-            cityController.text = profile.city;
+            /// Load data only first time
+            if (!isInitialized) {
+              nameController.text = profile.name;
+              phoneController.text = profile.phone;
+              addressController.text = profile.address;
+              cityController.text = profile.city;
+              isInitialized = true;
+            }
 
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -58,7 +66,6 @@ class ProfileView extends StatelessWidget {
                 children: [
                   const SizedBox(height: 16),
 
-                  /// Editable Fields
                   _buildTextField(nameController, "Name"),
                   _buildTextField(phoneController, "Phone"),
                   _buildTextField(addressController, "Address"),
@@ -66,7 +73,7 @@ class ProfileView extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  /// Update Button
+                  /// UPDATE BUTTON
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -84,7 +91,7 @@ class ProfileView extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
-                  /// Logout Button
+                  /// LOGOUT BUTTON
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
@@ -99,10 +106,8 @@ class ProfileView extends StatelessWidget {
             );
           }),
 
-          /// ⭐ Temperature Widget
+          /// FLOATING WIDGETS (same style as HomeView)
           Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
-
-          /// ⭐ Date & Time Widget
           const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
       ),

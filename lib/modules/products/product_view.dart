@@ -159,7 +159,7 @@ class _ProductViewState extends State<ProductView> {
                   Align(
                     alignment: Alignment.bottomRight,
                     child: Padding(
-                      padding: const EdgeInsets.only(right: 20, bottom: 60),
+                      padding: const EdgeInsets.only(right: 20, bottom: 20),
                       child: TemperatureWidget(),
                     ),
                   ),
