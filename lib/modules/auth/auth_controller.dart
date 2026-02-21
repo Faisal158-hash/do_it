@@ -7,24 +7,30 @@ class AuthController extends GetxController {
   final box = GetStorage();
 
   RxBool isLoggedIn = false.obs;
-  RxString userName = "".obs;   // store user name
-  RxString userEmail = "".obs;  // store user email
+  RxString userName = "".obs;
+  RxString userEmail = "".obs;
+  RxString userPhone = "".obs; // ⭐ ADDED (for profile page)
 
   final int visitLimit = 5;
 
   @override
   void onInit() {
     super.onInit();
+    loadFromStorage(); // ⭐ load saved user first
     checkSession();
   }
 
+  /// CHECK SUPABASE SESSION
   void checkSession() {
     final session = supabase.auth.currentSession;
+
     if (session != null) {
       isLoggedIn.value = true;
       userEmail.value = session.user.email ?? "";
-      // fetch user name from Supabase metadata if stored
       userName.value = session.user.userMetadata?['name'] ?? "";
+      userPhone.value = session.user.userMetadata?['phone'] ?? "";
+
+      saveUserToStorage(); // ⭐ persist data
     } else {
       isLoggedIn.value = false;
     }
@@ -37,7 +43,7 @@ class AuthController extends GetxController {
     return visits > visitLimit;
   }
 
-  /// LOGIN
+  /// LOGIN (only if credentials exist in Supabase)
   Future<String?> login(String email, String password) async {
     try {
       final res = await supabase.auth.signInWithPassword(
@@ -46,29 +52,25 @@ class AuthController extends GetxController {
       );
 
       if (res.user == null) {
-        return "Unable to login. Register your account";
+        return "User not found. Please signup.";
       }
 
-      // set login state and user info
+      // set login state
       isLoggedIn.value = true;
       userEmail.value = res.user!.email ?? "";
       userName.value = res.user!.userMetadata?['name'] ?? "";
+      userPhone.value = res.user!.userMetadata?['phone'] ?? "";
 
-      // reset visit counter
       box.write("visits", 0);
-
-      // persist login info locally
-      box.write("isLoggedIn", true);
-      box.write("userName", userName.value);
-      box.write("userEmail", userEmail.value);
+      saveUserToStorage();
 
       return null;
     } catch (e) {
-      return "Unable to login. Register your account";
+      return "Invalid email or password. Please signup first.";
     }
   }
 
-  /// SIGNUP
+  /// SIGNUP → store data + auto login
   Future<String?> signup({
     required String email,
     required String password,
@@ -86,15 +88,12 @@ class AuthController extends GetxController {
         return "Unable to signup. Try again";
       }
 
-      // set login state and user info
       isLoggedIn.value = true;
-      userEmail.value = res.user!.email ?? "";
+      userEmail.value = email;
       userName.value = name;
+      userPhone.value = phone;
 
-      // persist login info locally
-      box.write("isLoggedIn", true);
-      box.write("userName", userName.value);
-      box.write("userEmail", userEmail.value);
+      saveUserToStorage();
 
       return null;
     } catch (e) {
@@ -102,26 +101,35 @@ class AuthController extends GetxController {
     }
   }
 
-  /// LOGOUT
-  void logout() {
+  /// LOGOUT → remove profile button automatically
+  Future<void> logout() async {
+    await supabase.auth.signOut();
+
     isLoggedIn.value = false;
     userName.value = "";
     userEmail.value = "";
+    userPhone.value = "";
 
-    box.write("isLoggedIn", false);
-    box.remove("userName");
-    box.remove("userEmail");
-
-    supabase.auth.signOut();
+    box.erase(); // ⭐ clear everything
   }
 
-  /// LOAD USER INFO FROM STORAGE (optional auto-login)
+  /// SAVE USER DATA LOCALLY
+  void saveUserToStorage() {
+    box.write("isLoggedIn", true);
+    box.write("userName", userName.value);
+    box.write("userEmail", userEmail.value);
+    box.write("userPhone", userPhone.value);
+  }
+
+  /// AUTO LOGIN FROM STORAGE
   void loadFromStorage() {
     final storedLoggedIn = box.read("isLoggedIn") ?? false;
+
     if (storedLoggedIn) {
       isLoggedIn.value = true;
       userName.value = box.read("userName") ?? "";
       userEmail.value = box.read("userEmail") ?? "";
+      userPhone.value = box.read("userPhone") ?? "";
     }
   }
 }

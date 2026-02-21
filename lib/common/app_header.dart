@@ -41,77 +41,77 @@ class AppHeaderView extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final auth = Get.find<AuthController>();
-    return AppBar(
-      backgroundColor: const Color(0xFF2E7D32),
+    // ensure controller exists globally
+    final auth = Get.put(AuthController());
 
-      /// LOGO + TITLE
-      title: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.zero,
-            child: Image.asset(
-              kAppLogo,
-              height: 36,
-              width: 36,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const SizedBox(
+    // ⭐ Wrap whole AppBar in Obx so UI updates on login/logout
+    return Obx(() => AppBar(
+          backgroundColor: const Color(0xFF2E7D32),
+
+          /// LOGO + TITLE
+          title: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.zero,
+                child: Image.asset(
+                  kAppLogo,
                   height: 36,
                   width: 36,
-                  child: Icon(Icons.store, color: Colors.white),
-                );
-              },
-            ),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const SizedBox(
+                      height: 36,
+                      width: 36,
+                      child: Icon(Icons.store, color: Colors.white),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(pageTitle ?? 'Kisan Traders'),
+            ],
           ),
 
-          const SizedBox(width: 10),
-          Text(pageTitle ?? 'Kisan Traders'),
-        ],
-      ),
+          /// NAVIGATION MENU
+          actions: [
+            Row(
+              children: [
+                NavItem(
+                  icon: Icons.home_outlined,
+                  label: 'Home',
+                  onTap: () => navigateWithAuth(AppRoutes.home),
+                ),
 
-      /// NAVIGATION MENU
-      actions: [
-        Row(
-          children: [
-            NavItem(
-              icon: Icons.home_outlined,
-              label: 'Home',
-              onTap: () => navigateWithAuth(AppRoutes.home),
-            ),
+                NavItem(
+                  icon: Icons.storefront_outlined,
+                  label: 'Products',
+                  onTap: () => navigateWithAuth(AppRoutes.product),
+                ),
 
-            NavItem(
-              icon: Icons.storefront_outlined,
-              label: 'Products',
-              onTap: () => navigateWithAuth(AppRoutes.product),
-            ),
+                NavItem(
+                  icon: Icons.receipt_long_outlined,
+                  label: 'Orders',
+                  onTap: () => navigateWithAuth(AppRoutes.orders),
+                ),
 
-            NavItem(
-              icon: Icons.receipt_long_outlined,
-              label: 'Orders',
-              onTap: () => navigateWithAuth(AppRoutes.orders),
-            ),
+                NavItem(
+                  icon: Icons.shopping_cart_outlined,
+                  label: 'Cart',
+                  onTap: () => navigateWithAuth(AppRoutes.cart),
+                ),
 
-            NavItem(
-              icon: Icons.shopping_cart_outlined,
-              label: 'Cart',
-              onTap: () => navigateWithAuth(AppRoutes.cart),
-            ),
-
-            /// ⭐ PROFILE BUTTON: ONLY SHOW IF LOGGED IN
-            Obx(() => auth.isLoggedIn.value
-                ? NavItem(
+                /// ⭐ PROFILE BUTTON → only when logged in
+                if (auth.isLoggedIn.value)
+                  NavItem(
                     icon: Icons.person_outline,
                     label: 'Profile',
                     onTap: () => navigateWithAuth(AppRoutes.profile),
-                  )
-                : const SizedBox.shrink() // hidden if not logged in
+                  ),
+              ],
             ),
+            const SizedBox(width: 10),
           ],
-        ),
-        const SizedBox(width: 10),
-      ],
-    );
+        ));
   }
 
   @override
