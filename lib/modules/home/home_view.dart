@@ -22,16 +22,18 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
-
-    /// Initialize controllers safely
     data = Get.put(HomeSupabaseController(), permanent: true);
     controller = Get.put(HomeController(), permanent: true);
-
     controller.startAutoSlide();
   }
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+    final contentWidth = isMobile ? width * 0.95 : 600.0;
+    final sectionSpacing = isMobile ? 24.0 : 40.0;
+
     return Scaffold(
       appBar: const AppHeaderView(
         pageTitle: 'Home',
@@ -40,66 +42,65 @@ class _HomeViewState extends State<HomeView> {
       ),
       bottomNavigationBar: const AppFooter(),
       backgroundColor: const Color(0xFFF5F5F5),
-
       body: Stack(
         children: [
-          /// Pull to refresh
           RefreshIndicator(
-            onRefresh: () async {
-              data.fetchAll(); // make sure this exists in controller
-            },
+            onRefresh: () async => data.fetchAll(),
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  _searchBar(),
-                  const SizedBox(height: 20),
-                  _bannerSlider(),
-                  const SizedBox(height: 40),
-                  _platformIntro(),
-                  const SizedBox(height: 40),
-                  _categoriesSection(),
-                  const SizedBox(height: 40),
-                  _featuredProducts(),
-                  const SizedBox(height: 40),
-                  _marketRates(),
-                  const SizedBox(height: 40),
-                  _testimonials(),
-                  const SizedBox(height: 40),
-                  _blogNews(),
-                  const SizedBox(height: 120),
-                ],
+              child: Center(
+                child: Container(
+                  width: contentWidth,
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      _searchBar(),
+                      SizedBox(height: sectionSpacing),
+                      _bannerSlider(),
+                      SizedBox(height: sectionSpacing),
+                      _platformIntro(),
+                      SizedBox(height: sectionSpacing),
+                      _categoriesSection(),
+                      SizedBox(height: sectionSpacing),
+                      _featuredProducts(),
+                      SizedBox(height: sectionSpacing),
+                      _marketRates(),
+                      SizedBox(height: sectionSpacing),
+                      _testimonials(),
+                      SizedBox(height: sectionSpacing),
+                      _blogNews(),
+                      SizedBox(height: sectionSpacing * 3),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-
           Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
           const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
       ),
     );
   }
+
   // ---------------- SEARCH BAR ----------------
   Widget _searchBar() {
-    return Center(
-      child: SizedBox(
-        width: 500,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: 'Search crops, markets, services...',
-              prefixIcon: const Icon(Icons.search),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
+    return TextField(
+      decoration: InputDecoration(
+        hintText: 'Search crops, markets, services...',
+        prefixIcon: const Icon(Icons.search),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
         ),
       ),
     );
@@ -113,22 +114,20 @@ class _HomeViewState extends State<HomeView> {
         if (data.banners.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
-
         return PageView.builder(
           controller: controller.pageController,
           itemCount: data.banners.length,
           itemBuilder: (context, index) {
             final banner = data.banners[index];
-
-            return Image.network(
-              banner['image_url'] ?? '',
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, progress) {
-                if (progress == null) return child;
-                return const Center(child: CircularProgressIndicator());
-              },
-              errorBuilder: (_, __, ___) =>
-                  const Center(child: Icon(Icons.error)),
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.network(
+                banner['image_url'] ?? '',
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, progress) =>
+                    progress == null ? child : const Center(child: CircularProgressIndicator()),
+                errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.error)),
+              ),
             );
           },
         );
@@ -138,20 +137,21 @@ class _HomeViewState extends State<HomeView> {
 
   // ---------------- PLATFORM INTRO ----------------
   Widget _platformIntro() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
-          ),
-          borderRadius: BorderRadius.circular(24),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
         ),
-        child: const Text(
-          'Kisan Traders connects farmers, markets, and consumers.',
-          style: TextStyle(color: Colors.white, fontSize: 16),
-        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 10, offset: const Offset(0, 5)),
+        ],
+      ),
+      child: const Text(
+        'Kisan Traders connects farmers, markets, and consumers.',
+        style: TextStyle(color: Colors.white, fontSize: 16),
       ),
     );
   }
@@ -163,33 +163,26 @@ class _HomeViewState extends State<HomeView> {
       child: SizedBox(
         height: 120,
         child: Obx(() {
-          if (data.categories.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          return GridView.builder(
+          if (data.categories.isEmpty) return const Center(child: CircularProgressIndicator());
+          return ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: data.categories.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 1,
-              mainAxisSpacing: 12,
-              childAspectRatio: 3.5,
-            ),
             itemBuilder: (context, index) {
               final category = data.categories[index];
-
               return Container(
+                width: 140,
+                margin: const EdgeInsets.only(right: 12),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(int.tryParse(category['gradient_start']) ??
-                          0xFF4CAF50),
-                      Color(int.tryParse(category['gradient_end']) ??
-                          0xFF81C784),
+                      Color(int.tryParse(category['gradient_start']) ?? 0xFF4CAF50),
+                      Color(int.tryParse(category['gradient_end']) ?? 0xFF81C784),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black12, blurRadius: 6, offset: const Offset(0, 4)),
+                  ],
                 ),
                 child: Center(
                   child: Text(
@@ -215,33 +208,31 @@ class _HomeViewState extends State<HomeView> {
       child: SizedBox(
         height: 180,
         child: Obx(() {
-          if (data.featuredProducts.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
+          if (data.featuredProducts.isEmpty) return const Center(child: CircularProgressIndicator());
           return ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: data.featuredProducts.length,
             separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
               final product = data.featuredProducts[index];
-
               return Container(
                 width: 140,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.black87,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black12, blurRadius: 6, offset: const Offset(0, 4)),
+                  ],
                 ),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.agriculture,
-                        size: 40, color: Colors.greenAccent),
-                    Text(product['name'] ?? '',
-                        style: const TextStyle(color: Colors.white)),
-                    Text("Rs. ${product['price']}",
-                        style: const TextStyle(color: Colors.greenAccent)),
+                    const Icon(Icons.agriculture, size: 40, color: Colors.green),
+                    const SizedBox(height: 8),
+                    Text(product['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text("Rs. ${product['price']}", style: const TextStyle(color: Colors.green)),
                   ],
                 ),
               );
@@ -257,18 +248,20 @@ class _HomeViewState extends State<HomeView> {
     return _sectionWrapper(
       title: 'Today Market Rates',
       child: Obx(() {
-        if (data.marketRates.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
+        if (data.marketRates.isEmpty) return const Center(child: CircularProgressIndicator());
         return Column(
           children: data.marketRates.map((rate) {
-            return ListTile(
-              leading: const Icon(Icons.trending_up),
-              title: Text(rate['crop_name'] ?? ''),
-              trailing: Text(
-                "Rs. ${rate['price']}",
-                style: const TextStyle(fontWeight: FontWeight.bold),
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 6),
+              elevation: 3,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: ListTile(
+                leading: const Icon(Icons.trending_up, color: Colors.green),
+                title: Text(rate['crop_name'] ?? ''),
+                trailing: Text(
+                  "Rs. ${rate['price']}",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             );
           }).toList(),
@@ -280,18 +273,9 @@ class _HomeViewState extends State<HomeView> {
   // ---------------- TESTIMONIALS ----------------
   Widget _testimonials() {
     final testimonials = [
-      {
-        "name": "Farmer Ali",
-        "text": "Kisan Traders helped me sell crops at better prices.",
-      },
-      {
-        "name": "Farmer Sana",
-        "text": "I got real-time market rates and sold my wheat profitably.",
-      },
-      {
-        "name": "Farmer Bilal",
-        "text": "The platform is easy to use and very reliable.",
-      },
+      {"name": "Farmer Ali", "text": "Kisan Traders helped me sell crops at better prices."},
+      {"name": "Farmer Sana", "text": "I got real-time market rates and sold my wheat profitably."},
+      {"name": "Farmer Bilal", "text": "The platform is easy to use and very reliable."},
     ];
 
     return _sectionWrapper(
@@ -309,6 +293,9 @@ class _HomeViewState extends State<HomeView> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 color: Colors.green.shade400,
+                boxShadow: [
+                  BoxShadow(color: Colors.black12, blurRadius: 6, offset: const Offset(0, 4)),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,8 +308,7 @@ class _HomeViewState extends State<HomeView> {
                     alignment: Alignment.bottomRight,
                     child: Text("- ${testimonials[index]['name']!}",
                         style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold)),
+                            color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -338,10 +324,7 @@ class _HomeViewState extends State<HomeView> {
     return _sectionWrapper(
       title: 'Agriculture News',
       child: Obx(() {
-        if (data.blogs.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
+        if (data.blogs.isEmpty) return const Center(child: CircularProgressIndicator());
         return SizedBox(
           height: 180,
           child: ListView.builder(
@@ -349,30 +332,33 @@ class _HomeViewState extends State<HomeView> {
             itemCount: data.blogs.length,
             itemBuilder: (context, index) {
               final blog = data.blogs[index];
-
               return Container(
                 width: 220,
                 margin: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   color: Colors.green.shade300,
+                  boxShadow: [
+                    BoxShadow(color: Colors.black12, blurRadius: 6, offset: const Offset(0, 4)),
+                  ],
                 ),
                 child: Column(
                   children: [
                     Expanded(
-                      child: Image.network(
-                        blog['image_url'] ?? '',
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.article),
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                        child: Image.network(
+                          blog['image_url'] ?? '',
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.article),
+                        ),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(12),
                       child: Text(blog['title'] ?? '',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis),
+                          maxLines: 2, overflow: TextOverflow.ellipsis),
                     ),
                   ],
                 ),
@@ -385,18 +371,14 @@ class _HomeViewState extends State<HomeView> {
   }
 
   // ---------------- SECTION WRAPPER ----------------
-  Widget _sectionWrapper({
-    required String title,
-    required Widget child,
-  }) {
+  Widget _sectionWrapper({required String title, required Widget child}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style:
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           child,
         ],

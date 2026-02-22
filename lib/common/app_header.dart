@@ -1,7 +1,6 @@
 import 'package:do_it/modules/auth/auth_controller.dart';
 import 'package:do_it/modules/auth/login_view.dart';
 import 'package:flutter/material.dart';
-// ignore: depend_on_referenced_packages
 import 'package:get/get.dart';
 import 'package:do_it/app/routes/app_routes.dart';
 
@@ -19,18 +18,15 @@ class AppHeaderView extends StatelessWidget implements PreferredSizeWidget {
     this.pageTitle,
   });
 
-  /// ⭐ AUTH CHECK BEFORE NAVIGATION
   Future<void> navigateWithAuth(String route) async {
     final auth = Get.find<AuthController>();
 
-    // if user not logged OR visit limit crossed
     if (!auth.isLoggedIn.value || auth.shouldForceLogin()) {
       final result = await Get.dialog(
         const LoginPopup(),
         barrierDismissible: false,
       );
 
-      // if login success → go to page
       if (result == true) {
         Get.toNamed(route);
       }
@@ -41,106 +37,159 @@ class AppHeaderView extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ensure controller exists globally
     final auth = Get.put(AuthController());
 
-    // ⭐ Wrap whole AppBar in Obx so UI updates on login/logout
-    return Obx(() => AppBar(
-          backgroundColor: const Color(0xFF2E7D32),
+    // ⭐ responsive sizes
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
 
-          /// LOGO + TITLE
-          title: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.zero,
+    final logoSize = isMobile ? 36.0 : 42.0;
+    final fontSize = isMobile ? 16.0 : 18.0;
+    final iconSize = isMobile ? 20.0 : 24.0;
+    final horizontalPadding = width * 0.02;
+
+    return Obx(
+      () => AppBar(
+        backgroundColor: const Color(0xFF2E7D32),
+        elevation: 2,
+
+        /// LOGO + TITLE
+        title: Row(
+          children: [
+            /// ⭐ CIRCULAR LOGO
+            CircleAvatar(
+              radius: logoSize / 2,
+              backgroundColor: Colors.white,
+              child: ClipOval(
                 child: Image.asset(
                   kAppLogo,
-                  height: 36,
-                  width: 36,
+                  height: logoSize,
+                  width: logoSize,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
-                    return const SizedBox(
-                      height: 36,
-                      width: 36,
-                      child: Icon(Icons.store, color: Colors.white),
-                    );
+                    return Icon(Icons.store,
+                        color: Colors.green, size: logoSize * 0.6);
                   },
                 ),
               ),
-              const SizedBox(width: 10),
-              Text(pageTitle ?? 'Kisan Traders'),
-            ],
-          ),
-
-          /// NAVIGATION MENU
-          actions: [
-            Row(
-              children: [
-                NavItem(
-                  icon: Icons.home_outlined,
-                  label: 'Home',
-                  onTap: () => navigateWithAuth(AppRoutes.home),
-                ),
-
-                NavItem(
-                  icon: Icons.storefront_outlined,
-                  label: 'Products',
-                  onTap: () => navigateWithAuth(AppRoutes.product),
-                ),
-
-                NavItem(
-                  icon: Icons.receipt_long_outlined,
-                  label: 'Orders',
-                  onTap: () => navigateWithAuth(AppRoutes.orders),
-                ),
-
-                NavItem(
-                  icon: Icons.shopping_cart_outlined,
-                  label: 'Cart',
-                  onTap: () => navigateWithAuth(AppRoutes.cart),
-                ),
-
-                /// ⭐ PROFILE BUTTON → only when logged in
-                if (auth.isLoggedIn.value)
-                  NavItem(
-                    icon: Icons.person_outline,
-                    label: 'Profile',
-                    onTap: () => navigateWithAuth(AppRoutes.profile),
-                  ),
-              ],
             ),
-            const SizedBox(width: 10),
+
+            SizedBox(width: horizontalPadding),
+
+            /// TITLE
+            Flexible(
+              child: Text(
+                pageTitle ?? 'Kisan Traders',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ],
-        ));
+        ),
+
+        /// RESPONSIVE NAVIGATION
+        actions: [
+          SizedBox(
+            width: isMobile ? width * 0.6 : width * 0.45,
+
+            /// ⭐ Scrollable → prevents overflow on small screens
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  NavItem(
+                    icon: Icons.home_outlined,
+                    label: 'Home',
+                    iconSize: iconSize,
+                    fontSize: fontSize - 2,
+                    onTap: () => navigateWithAuth(AppRoutes.home),
+                  ),
+                  NavItem(
+                    icon: Icons.storefront_outlined,
+                    label: 'Products',
+                    iconSize: iconSize,
+                    fontSize: fontSize - 2,
+                    onTap: () => navigateWithAuth(AppRoutes.product),
+                  ),
+                  NavItem(
+                    icon: Icons.receipt_long_outlined,
+                    label: 'Orders',
+                    iconSize: iconSize,
+                    fontSize: fontSize - 2,
+                    onTap: () => navigateWithAuth(AppRoutes.orders),
+                  ),
+                  NavItem(
+                    icon: Icons.shopping_cart_outlined,
+                    label: 'Cart',
+                    iconSize: iconSize,
+                    fontSize: fontSize - 2,
+                    onTap: () => navigateWithAuth(AppRoutes.cart),
+                  ),
+
+                  /// PROFILE ONLY WHEN LOGGED IN
+                  if (auth.isLoggedIn.value)
+                    NavItem(
+                      icon: Icons.person_outline,
+                      label: 'Profile',
+                      iconSize: iconSize,
+                      fontSize: fontSize - 2,
+                      onTap: () => navigateWithAuth(AppRoutes.profile),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(width: horizontalPadding),
+        ],
+      ),
+    );
   }
 
+  /// slightly larger height for better UI
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(65);
 }
 
 class NavItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final double iconSize;
+  final double fontSize;
 
   const NavItem({
     super.key,
     required this.icon,
     required this.label,
     required this.onTap,
+    required this.iconSize,
+    required this.fontSize,
   });
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: EdgeInsets.symmetric(horizontal: width * 0.015),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: Colors.white),
-            Text(label, style: const TextStyle(color: Colors.white)),
+            Icon(icon, color: Colors.white, size: iconSize),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: fontSize,
+              ),
+            ),
           ],
         ),
       ),

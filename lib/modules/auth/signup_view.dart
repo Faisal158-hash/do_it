@@ -13,6 +13,17 @@ class SignupPopup extends StatelessWidget {
     final controller = Get.put(SignupController());
     final formKey = GlobalKey<FormState>();
 
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
+    final dialogWidth = isMobile ? width * 0.85 : 400.0;
+    final padding = isMobile ? 20.0 : 24.0;
+    final iconSize = isMobile ? 40.0 : 45.0;
+    final titleFont = isMobile ? 20.0 : 22.0;
+    final subtitleFont = isMobile ? 13.0 : 14.0;
+    final fieldFont = isMobile ? 14.0 : 16.0;
+    final buttonHeight = isMobile ? 48.0 : 50.0;
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(20),
@@ -32,10 +43,9 @@ class SignupPopup extends StatelessWidget {
             /// ⭐ GLASS EFFECT
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-
               child: Container(
-                width: 350,
-                padding: const EdgeInsets.all(24),
+                width: dialogWidth,
+                padding: EdgeInsets.all(padding),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(.85),
                   borderRadius: BorderRadius.circular(30),
@@ -55,24 +65,26 @@ class SignupPopup extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         /// ⭐ ICON + TITLE
-                        const Icon(
+                        Icon(
                           Icons.person_add_alt_1,
-                          size: 45,
-                          color: Color(0xFF2E7D32),
+                          size: iconSize,
+                          color: const Color(0xFF2E7D32),
                         ),
                         const SizedBox(height: 10),
-                        const Text(
+                        Text(
                           "Create Account",
                           style: TextStyle(
-                            fontSize: 22,
+                            fontSize: titleFont,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF2E7D32),
+                            color: const Color(0xFF2E7D32),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           "Sign up to continue",
-                          style: TextStyle(color: Colors.grey.shade600),
+                          style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: subtitleFont),
                         ),
                         const SizedBox(height: 25),
 
@@ -81,6 +93,7 @@ class SignupPopup extends StatelessWidget {
                           controller: controller.nameController,
                           label: "Full Name",
                           icon: Icons.person_outline,
+                          fontSize: fieldFont,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return "Enter your name";
@@ -88,7 +101,6 @@ class SignupPopup extends StatelessWidget {
                             return null;
                           },
                         ),
-
                         const SizedBox(height: 16),
 
                         /// PHONE
@@ -97,6 +109,7 @@ class SignupPopup extends StatelessWidget {
                           label: "Phone",
                           icon: Icons.phone_outlined,
                           keyboard: TextInputType.phone,
+                          fontSize: fieldFont,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return "Enter phone number";
@@ -107,7 +120,6 @@ class SignupPopup extends StatelessWidget {
                             return null;
                           },
                         ),
-
                         const SizedBox(height: 16),
 
                         /// EMAIL
@@ -116,6 +128,7 @@ class SignupPopup extends StatelessWidget {
                           label: "Email",
                           icon: Icons.email_outlined,
                           keyboard: TextInputType.emailAddress,
+                          fontSize: fieldFont,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return "Enter email";
@@ -126,7 +139,6 @@ class SignupPopup extends StatelessWidget {
                             return null;
                           },
                         ),
-
                         const SizedBox(height: 16),
 
                         /// PASSWORD
@@ -136,13 +148,15 @@ class SignupPopup extends StatelessWidget {
                             label: "Password",
                             icon: Icons.lock_outline,
                             obscure: controller.hidePassword.value,
+                            fontSize: fieldFont,
                             suffix: IconButton(
                               icon: Icon(
                                 controller.hidePassword.value
                                     ? Icons.visibility_off
                                     : Icons.visibility,
                               ),
-                              onPressed: () => controller.hidePassword.toggle(),
+                              onPressed: () =>
+                                  controller.hidePassword.toggle(),
                             ),
                             validator: (value) {
                               if (value == null || value.length < 6) {
@@ -152,7 +166,6 @@ class SignupPopup extends StatelessWidget {
                             },
                           ),
                         ),
-
                         const SizedBox(height: 8),
 
                         /// ERROR MESSAGE
@@ -170,18 +183,18 @@ class SignupPopup extends StatelessWidget {
                                   ),
                                 ),
                         ),
-
                         const SizedBox(height: 24),
 
                         /// ⭐ MODERN SIGNUP BUTTON
                         SizedBox(
                           width: double.infinity,
-                          height: 50,
+                          height: buttonHeight,
                           child: Obx(
                             () => ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 elevation: 6,
-                                shadowColor: Colors.green.withOpacity(.5),
+                                shadowColor:
+                                    Colors.green.withOpacity(.5),
                                 backgroundColor: const Color(0xFF2E7D32),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
@@ -194,9 +207,8 @@ class SignupPopup extends StatelessWidget {
                                         return;
                                       }
 
-                                      final success = await controller
-                                          .registerUser();
-
+                                      final success =
+                                          await controller.registerUser();
                                       if (success) {
                                         Get.back();
                                         Get.snackbar(
@@ -207,14 +219,14 @@ class SignupPopup extends StatelessWidget {
                                         );
                                       }
                                     },
-
                               child: AnimatedSwitcher(
                                 duration: const Duration(milliseconds: 300),
                                 child: controller.isLoading.value
-                                    ? const SizedBox(
-                                        height: 22,
-                                        width: 22,
-                                        child: CircularProgressIndicator(
+                                    ? SizedBox(
+                                        height: buttonHeight / 2.2,
+                                        width: buttonHeight / 2.2,
+                                        child:
+                                            const CircularProgressIndicator(
                                           color: Colors.white,
                                           strokeWidth: 2,
                                         ),
@@ -227,7 +239,6 @@ class SignupPopup extends StatelessWidget {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 14),
 
                         /// LOGIN NAVIGATION
@@ -239,7 +250,8 @@ class SignupPopup extends StatelessWidget {
                               barrierDismissible: true,
                             );
                           },
-                          child: const Text("Already have an account? Login"),
+                          child: const Text(
+                              "Already have an account? Login"),
                         ),
                       ],
                     ),
@@ -262,12 +274,14 @@ class SignupPopup extends StatelessWidget {
     bool obscure = false,
     Widget? suffix,
     String? Function(String?)? validator,
+    double fontSize = 16.0,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboard,
       obscureText: obscure,
       validator: validator,
+      style: TextStyle(fontSize: fontSize),
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
@@ -275,17 +289,15 @@ class SignupPopup extends StatelessWidget {
         filled: true,
         fillColor: Colors.white.withOpacity(.9),
         contentPadding: const EdgeInsets.symmetric(vertical: 18),
-
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
-
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
+          borderSide:
+              const BorderSide(color: Color(0xFF2E7D32), width: 2),
         ),
-
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Colors.red),

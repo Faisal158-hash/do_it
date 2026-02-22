@@ -13,29 +13,36 @@ class LoginPopup extends StatelessWidget {
     final controller = Get.put(LoginController());
     final formKey = GlobalKey<FormState>();
 
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
+    final dialogWidth = isMobile ? width * 0.85 : 400.0;
+    final padding = isMobile ? 20.0 : 24.0;
+    final iconSize = isMobile ? 40.0 : 45.0;
+    final titleFont = isMobile ? 20.0 : 22.0;
+    final subtitleFont = isMobile ? 13.0 : 14.0;
+    final fieldFont = isMobile ? 14.0 : 16.0;
+    final buttonHeight = isMobile ? 48.0 : 50.0;
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(20),
-
       child: TweenAnimationBuilder(
         duration: const Duration(milliseconds: 400),
         tween: Tween(begin: 0.8, end: 1.0),
         builder: (context, value, child) {
           return Transform.scale(scale: value, child: child);
         },
-
         child: Center(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(30),
 
-            /// ⭐ GLASS EFFECT
+            /// ⭐ Glass effect
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-
               child: Container(
-                width: 350,
-                padding: const EdgeInsets.all(24),
-
+                width: dialogWidth,
+                padding: EdgeInsets.all(padding),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(.85),
                   borderRadius: BorderRadius.circular(30),
@@ -48,38 +55,39 @@ class LoginPopup extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 child: SingleChildScrollView(
                   child: Form(
                     key: formKey,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        /// ⭐ TITLE
-                        const Icon(
+                        /// ⭐ TITLE ICON
+                        Icon(
                           Icons.lock_outline,
-                          size: 45,
-                          color: Color(0xFF2E7D32),
+                          size: iconSize,
+                          color: const Color(0xFF2E7D32),
                         ),
-
                         const SizedBox(height: 10),
 
-                        const Text(
+                        /// TITLE TEXT
+                        Text(
                           "Welcome Back",
                           style: TextStyle(
-                            fontSize: 22,
+                            fontSize: titleFont,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF2E7D32),
+                            color: const Color(0xFF2E7D32),
                           ),
                         ),
-
                         const SizedBox(height: 4),
 
+                        /// SUBTITLE
                         Text(
                           "Login to continue",
-                          style: TextStyle(color: Colors.grey.shade600),
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: subtitleFont,
+                          ),
                         ),
-
                         const SizedBox(height: 25),
 
                         /// EMAIL FIELD
@@ -88,6 +96,7 @@ class LoginPopup extends StatelessWidget {
                           label: "Email",
                           icon: Icons.email_outlined,
                           keyboard: TextInputType.emailAddress,
+                          fontSize: fieldFont,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return "Enter email";
@@ -98,7 +107,6 @@ class LoginPopup extends StatelessWidget {
                             return null;
                           },
                         ),
-
                         const SizedBox(height: 16),
 
                         /// PASSWORD FIELD
@@ -108,13 +116,15 @@ class LoginPopup extends StatelessWidget {
                             label: "Password",
                             icon: Icons.lock_outline,
                             obscure: controller.hidePassword.value,
+                            fontSize: fieldFont,
                             suffix: IconButton(
                               icon: Icon(
                                 controller.hidePassword.value
                                     ? Icons.visibility_off
                                     : Icons.visibility,
                               ),
-                              onPressed: () => controller.hidePassword.toggle(),
+                              onPressed: () =>
+                                  controller.hidePassword.toggle(),
                             ),
                             validator: (value) {
                               if (value == null || value.length < 6) {
@@ -124,7 +134,6 @@ class LoginPopup extends StatelessWidget {
                             },
                           ),
                         ),
-
                         const SizedBox(height: 8),
 
                         /// ERROR MESSAGE
@@ -142,18 +151,18 @@ class LoginPopup extends StatelessWidget {
                                   ),
                                 ),
                         ),
-
                         const SizedBox(height: 22),
 
                         /// ⭐ MODERN LOGIN BUTTON
                         SizedBox(
                           width: double.infinity,
-                          height: 50,
+                          height: buttonHeight,
                           child: Obx(
                             () => ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 elevation: 6,
-                                shadowColor: Colors.green.withOpacity(.5),
+                                shadowColor:
+                                    Colors.green.withOpacity(.5),
                                 backgroundColor: const Color(0xFF2E7D32),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
@@ -165,18 +174,18 @@ class LoginPopup extends StatelessWidget {
                                       if (!formKey.currentState!.validate()) {
                                         return;
                                       }
-
-                                      final success = await controller
-                                          .loginUser();
+                                      final success =
+                                          await controller.loginUser();
                                       if (success) Get.back(result: true);
                                     },
                               child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 300),
+                                duration:
+                                    const Duration(milliseconds: 300),
                                 child: controller.isLoading.value
-                                    ? const SizedBox(
-                                        height: 22,
-                                        width: 22,
-                                        child: CircularProgressIndicator(
+                                    ? SizedBox(
+                                        height: buttonHeight / 2.2,
+                                        width: buttonHeight / 2.2,
+                                        child: const CircularProgressIndicator(
                                           color: Colors.white,
                                           strokeWidth: 2,
                                         ),
@@ -189,7 +198,6 @@ class LoginPopup extends StatelessWidget {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 14),
 
                         /// SIGNUP LINK
@@ -224,12 +232,14 @@ class LoginPopup extends StatelessWidget {
     bool obscure = false,
     Widget? suffix,
     String? Function(String?)? validator,
+    double fontSize = 16.0,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboard,
       obscureText: obscure,
       validator: validator,
+      style: TextStyle(fontSize: fontSize),
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
@@ -237,17 +247,14 @@ class LoginPopup extends StatelessWidget {
         filled: true,
         fillColor: Colors.white.withOpacity(.9),
         contentPadding: const EdgeInsets.symmetric(vertical: 18),
-
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
-
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
         ),
-
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Colors.red),

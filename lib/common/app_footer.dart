@@ -13,12 +13,26 @@ class AppFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
+    // ⭐ responsive breakpoints
+    final isMobile = width < 600;
+
+    // ⭐ responsive sizes
+    final paddingHorizontal = width * 0.04;
+    final paddingVertical = width * 0.03;
+    final fontSize = isMobile ? 13.0 : 15.0;
+    final iconSize = isMobile ? 16.0 : 20.0;
+    final circlePadding = isMobile ? 8.0 : 10.0;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: paddingHorizontal,
+        vertical: paddingVertical,
+      ),
       decoration: BoxDecoration(
         color: Colors.green.shade900,
-        borderRadius: const BorderRadius.vertical(top: Radius.zero),
         boxShadow: const [
           BoxShadow(
             color: Colors.black26,
@@ -27,51 +41,75 @@ class AppFooter extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          // Left Spacer (optional, can be 0)
-          const Spacer(flex: 1),
 
-          // COPYRIGHT TEXT CENTERED
-          const Text(
-            '© Kisan Traders 2026',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-
-          // Right Spacer pushes icons to the right
-          const Spacer(flex: 1),
-
-          // SOCIAL ICONS
-          Row(
-            children: _socialLinks.entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: InkWell(
-                  onTap: () => _launchURL(entry.value),
-                  borderRadius: BorderRadius.circular(30),
-                  splashColor: Colors.white24,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white12,
-                    ),
-                    child: FaIcon(entry.key, color: Colors.white, size: 18),
+      /// ⭐ Responsive layout switch
+      child: isMobile
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildCopyright(fontSize),
+                const SizedBox(height: 10),
+                _buildSocialIcons(iconSize, circlePadding),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: Container()),
+                _buildCopyright(fontSize),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: _buildSocialIcons(iconSize, circlePadding),
                   ),
                 ),
-              );
-            }).toList(),
-          ),
-        ],
+              ],
+            ),
+    );
+  }
+
+  // ================= COPYRIGHT =================
+
+  Widget _buildCopyright(double fontSize) {
+    return Text(
+      '© Kisan Traders 2026',
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: Colors.white70,
+        fontSize: fontSize,
+        fontWeight: FontWeight.w500,
       ),
     );
   }
 
-  // 🔹 Open social link
+  // ================= SOCIAL ICONS =================
+
+  Widget _buildSocialIcons(double iconSize, double padding) {
+    return Wrap(
+      spacing: 10,
+      children: _socialLinks.entries.map((entry) {
+        return InkWell(
+          onTap: () => _launchURL(entry.value),
+          borderRadius: BorderRadius.circular(50),
+          splashColor: Colors.white24,
+          child: Container(
+            padding: EdgeInsets.all(padding),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white12,
+            ),
+            child: FaIcon(
+              entry.key,
+              color: Colors.white,
+              size: iconSize,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // ================= URL LAUNCH =================
+
   void _launchURL(String url) async {
     final uri = Uri.parse(url);
     if (!await launchUrl(uri)) {
