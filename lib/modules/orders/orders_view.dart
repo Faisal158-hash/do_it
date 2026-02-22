@@ -198,7 +198,7 @@ class _OrderPageState extends State<OrderPage> {
           ),
 
           /// Temperature Widget
-          Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
+          Positioned(bottom: 120, right: 20, child: TemperatureWidget()),
 
           /// Date & Time Widget
           const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),

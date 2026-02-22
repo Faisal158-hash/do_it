@@ -109,7 +109,7 @@ class _ProfileViewState extends State<ProfileView> {
             ),
           ),
 
-          Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
+          Positioned(bottom: 120, right: 20, child: TemperatureWidget()),
           const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
       ),

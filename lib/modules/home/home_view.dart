@@ -1,7 +1,6 @@
 import 'package:do_it/common/temperature_widget.dart';
 import 'package:do_it/modules/home/home_supabase_controller.dart';
 import 'package:flutter/material.dart';
-// ignore: depend_on_referenced_packages
 import 'package:get/get.dart';
 import '../../common/app_header.dart';
 import '../../common/app_footer.dart';
@@ -29,11 +28,6 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final isMobile = width < 600;
-    final contentWidth = isMobile ? width * 0.95 : 600.0;
-    final sectionSpacing = isMobile ? 24.0 : 40.0;
-
     return Scaffold(
       appBar: const AppHeaderView(
         pageTitle: 'Home',
@@ -46,39 +40,40 @@ class _HomeViewState extends State<HomeView> {
         children: [
           RefreshIndicator(
             onRefresh: () async => data.fetchAll(),
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Center(
-                child: Container(
-                  width: contentWidth,
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 16),
-                      _searchBar(),
-                      SizedBox(height: sectionSpacing),
-                      _bannerSlider(),
-                      SizedBox(height: sectionSpacing),
-                      _platformIntro(),
-                      SizedBox(height: sectionSpacing),
-                      _categoriesSection(),
-                      SizedBox(height: sectionSpacing),
-                      _featuredProducts(),
-                      SizedBox(height: sectionSpacing),
-                      _marketRates(),
-                      SizedBox(height: sectionSpacing),
-                      _testimonials(),
-                      SizedBox(height: sectionSpacing),
-                      _blogNews(),
-                      SizedBox(height: sectionSpacing * 3),
-                    ],
-                  ),
+            child: LayoutBuilder(builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+              final horizontalPadding = isMobile ? 12.0 : 24.0;
+              final sectionSpacing = isMobile ? 24.0 : 40.0;
+
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    _searchBar(context),
+                    SizedBox(height: sectionSpacing),
+                    _bannerSlider(constraints),
+                    SizedBox(height: sectionSpacing),
+                    _platformIntro(),
+                    SizedBox(height: sectionSpacing),
+                    _categoriesSection(constraints),
+                    SizedBox(height: sectionSpacing),
+                    _featuredProducts(constraints),
+                    SizedBox(height: sectionSpacing),
+                    _marketRates(),
+                    SizedBox(height: sectionSpacing),
+                    _testimonials(constraints),
+                    SizedBox(height: sectionSpacing),
+                    _blogNews(constraints),
+                    SizedBox(height: sectionSpacing * 2),
+                  ],
                 ),
-              ),
-            ),
+              );
+            }),
           ),
-          Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
+          Positioned(bottom: 120, right: 20, child: TemperatureWidget()),
           const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
       ),
@@ -86,34 +81,38 @@ class _HomeViewState extends State<HomeView> {
   }
 
   // ---------------- SEARCH BAR ----------------
-  Widget _searchBar() {
-    return TextField(
-      decoration: InputDecoration(
-        hintText: 'Search crops, markets, services...',
-        prefixIcon: const Icon(Icons.search),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
+  Widget _searchBar(BuildContext context) {
+  return Center(
+    child: SizedBox(
+      width: MediaQuery.of(context).size.width * 0.5, // 50% screen width
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Search crops, markets, services...',
+          prefixIcon: const Icon(Icons.search),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // ---------------- BANNER SLIDER ----------------
-  Widget _bannerSlider() {
+  Widget _bannerSlider(BoxConstraints constraints) {
+    final height = constraints.maxWidth < 600 ? 200.0 : 250.0;
     return SizedBox(
-      height: 200,
+      height: height,
       child: Obx(() {
-        if (data.banners.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        if (data.banners.isEmpty) return const Center(child: CircularProgressIndicator());
         return PageView.builder(
           controller: controller.pageController,
           itemCount: data.banners.length,
@@ -124,6 +123,7 @@ class _HomeViewState extends State<HomeView> {
               child: Image.network(
                 banner['image_url'] ?? '',
                 fit: BoxFit.cover,
+                width: double.infinity,
                 loadingBuilder: (context, child, progress) =>
                     progress == null ? child : const Center(child: CircularProgressIndicator()),
                 errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.error)),
@@ -157,11 +157,11 @@ class _HomeViewState extends State<HomeView> {
   }
 
   // ---------------- CATEGORIES ----------------
-  Widget _categoriesSection() {
+  Widget _categoriesSection(BoxConstraints constraints) {
     return _sectionWrapper(
       title: 'Categories',
       child: SizedBox(
-        height: 120,
+        height: constraints.maxWidth < 600 ? 120 : 140,
         child: Obx(() {
           if (data.categories.isEmpty) return const Center(child: CircularProgressIndicator());
           return ListView.builder(
@@ -169,8 +169,9 @@ class _HomeViewState extends State<HomeView> {
             itemCount: data.categories.length,
             itemBuilder: (context, index) {
               final category = data.categories[index];
+              final width = constraints.maxWidth < 600 ? 140.0 : 180.0;
               return Container(
-                width: 140,
+                width: width,
                 margin: const EdgeInsets.only(right: 12),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -202,13 +203,14 @@ class _HomeViewState extends State<HomeView> {
   }
 
   // ---------------- FEATURED PRODUCTS ----------------
-  Widget _featuredProducts() {
+  Widget _featuredProducts(BoxConstraints constraints) {
     return _sectionWrapper(
       title: 'Featured Crops',
       child: SizedBox(
-        height: 180,
+        height: constraints.maxWidth < 600 ? 180 : 200,
         child: Obx(() {
           if (data.featuredProducts.isEmpty) return const Center(child: CircularProgressIndicator());
+          final itemWidth = constraints.maxWidth < 600 ? 140.0 : 180.0;
           return ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: data.featuredProducts.length,
@@ -216,7 +218,7 @@ class _HomeViewState extends State<HomeView> {
             itemBuilder: (context, index) {
               final product = data.featuredProducts[index];
               return Container(
-                width: 140,
+                width: itemWidth,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -271,23 +273,26 @@ class _HomeViewState extends State<HomeView> {
   }
 
   // ---------------- TESTIMONIALS ----------------
-  Widget _testimonials() {
+  Widget _testimonials(BoxConstraints constraints) {
     final testimonials = [
       {"name": "Farmer Ali", "text": "Kisan Traders helped me sell crops at better prices."},
       {"name": "Farmer Sana", "text": "I got real-time market rates and sold my wheat profitably."},
       {"name": "Farmer Bilal", "text": "The platform is easy to use and very reliable."},
     ];
 
+    final width = constraints.maxWidth < 600 ? 250.0 : 300.0;
+    final height = constraints.maxWidth < 600 ? 180.0 : 200.0;
+
     return _sectionWrapper(
       title: 'Success Stories',
       child: SizedBox(
-        height: 180,
+        height: height,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: testimonials.length,
           itemBuilder: (context, index) {
             return Container(
-              width: 250,
+              width: width,
               margin: const EdgeInsets.all(12),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -320,20 +325,23 @@ class _HomeViewState extends State<HomeView> {
   }
 
   // ---------------- BLOG ----------------
-  Widget _blogNews() {
+  Widget _blogNews(BoxConstraints constraints) {
+    final width = constraints.maxWidth < 600 ? 220.0 : 250.0;
+    final height = constraints.maxWidth < 600 ? 180.0 : 200.0;
+
     return _sectionWrapper(
       title: 'Agriculture News',
       child: Obx(() {
         if (data.blogs.isEmpty) return const Center(child: CircularProgressIndicator());
         return SizedBox(
-          height: 180,
+          height: height,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: data.blogs.length,
             itemBuilder: (context, index) {
               final blog = data.blogs[index];
               return Container(
-                width: 220,
+                width: width,
                 margin: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),

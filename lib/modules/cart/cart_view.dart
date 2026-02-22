@@ -134,7 +134,7 @@ class _CartPageState extends State<CartPage> {
           ),
 
           /// FLOATING WIDGETS
-          Positioned(bottom: 60, right: 20, child: TemperatureWidget()),
+          Positioned(bottom: 120, right: 20, child: TemperatureWidget()),
           const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
       ),

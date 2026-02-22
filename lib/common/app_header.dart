@@ -18,6 +18,7 @@ class AppHeaderView extends StatelessWidget implements PreferredSizeWidget {
     this.pageTitle,
   });
 
+  /// ---------------- NAVIGATION WITH AUTH ----------------
   Future<void> navigateWithAuth(String route) async {
     final auth = Get.find<AuthController>();
 
@@ -39,120 +40,137 @@ class AppHeaderView extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final auth = Get.put(AuthController());
 
-    // ⭐ responsive sizes
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 600;
 
     final logoSize = isMobile ? 36.0 : 42.0;
     final fontSize = isMobile ? 16.0 : 18.0;
     final iconSize = isMobile ? 20.0 : 24.0;
-    final horizontalPadding = width * 0.02;
+    final horizontalPadding = isMobile ? 12.0 : 24.0;
+    final navSpacing = isMobile ? 8.0 : 16.0;
 
-    return Obx(
-      () => AppBar(
-        backgroundColor: const Color(0xFF2E7D32),
-        elevation: 2,
+    return AppBar(
+      backgroundColor: const Color(0xFF2E7D32),
+      elevation: 2,
+      centerTitle: false,
+      automaticallyImplyLeading: false,
 
-        /// LOGO + TITLE
-        title: Row(
-          children: [
-            /// ⭐ CIRCULAR LOGO
-            CircleAvatar(
-              radius: logoSize / 2,
-              backgroundColor: Colors.white,
-              child: ClipOval(
-                child: Image.asset(
-                  kAppLogo,
-                  height: logoSize,
-                  width: logoSize,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(Icons.store,
-                        color: Colors.green, size: logoSize * 0.6);
-                  },
-                ),
-              ),
-            ),
-
-            SizedBox(width: horizontalPadding),
-
-            /// TITLE
-            Flexible(
-              child: Text(
-                pageTitle ?? 'Kisan Traders',
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        /// RESPONSIVE NAVIGATION
-        actions: [
-          SizedBox(
-            width: isMobile ? width * 0.6 : width * 0.45,
-
-            /// ⭐ Scrollable → prevents overflow on small screens
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  NavItem(
-                    icon: Icons.home_outlined,
-                    label: 'Home',
-                    iconSize: iconSize,
-                    fontSize: fontSize - 2,
-                    onTap: () => navigateWithAuth(AppRoutes.home),
-                  ),
-                  NavItem(
-                    icon: Icons.storefront_outlined,
-                    label: 'Products',
-                    iconSize: iconSize,
-                    fontSize: fontSize - 2,
-                    onTap: () => navigateWithAuth(AppRoutes.product),
-                  ),
-                  NavItem(
-                    icon: Icons.receipt_long_outlined,
-                    label: 'Orders',
-                    iconSize: iconSize,
-                    fontSize: fontSize - 2,
-                    onTap: () => navigateWithAuth(AppRoutes.orders),
-                  ),
-                  NavItem(
-                    icon: Icons.shopping_cart_outlined,
-                    label: 'Cart',
-                    iconSize: iconSize,
-                    fontSize: fontSize - 2,
-                    onTap: () => navigateWithAuth(AppRoutes.cart),
-                  ),
-
-                  /// PROFILE ONLY WHEN LOGGED IN
-                  if (auth.isLoggedIn.value)
-                    NavItem(
-                      icon: Icons.person_outline,
-                      label: 'Profile',
-                      iconSize: iconSize,
-                      fontSize: fontSize - 2,
-                      onTap: () => navigateWithAuth(AppRoutes.profile),
-                    ),
-                ],
+      /// ---------------- LOGO + TITLE ----------------
+      title: Row(
+        children: [
+          /// Circular Logo
+          CircleAvatar(
+            radius: logoSize / 2,
+            backgroundColor: Colors.white,
+            child: ClipOval(
+              child: Image.asset(
+                kAppLogo,
+                height: logoSize,
+                width: logoSize,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.store,
+                    color: Colors.green,
+                    size: logoSize * 0.6,
+                  );
+                },
               ),
             ),
           ),
+
           SizedBox(width: horizontalPadding),
+
+          /// Title
+          Flexible(
+            child: Text(
+              pageTitle ?? 'Kisan Traders',
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: fontSize,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ],
       ),
+
+      /// ---------------- NAVIGATION ----------------
+      actions: [
+        Padding(
+          padding: EdgeInsets.only(right: horizontalPadding),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                NavItem(
+                  icon: Icons.home_outlined,
+                  label: 'Home',
+                  iconSize: iconSize,
+                  fontSize: fontSize - 2,
+                  onTap: () => navigateWithAuth(AppRoutes.home),
+                ),
+
+                SizedBox(width: navSpacing),
+
+                NavItem(
+                  icon: Icons.storefront_outlined,
+                  label: 'Products',
+                  iconSize: iconSize,
+                  fontSize: fontSize - 2,
+                  onTap: () => navigateWithAuth(AppRoutes.product),
+                ),
+
+                SizedBox(width: navSpacing),
+
+                NavItem(
+                  icon: Icons.receipt_long_outlined,
+                  label: 'Orders',
+                  iconSize: iconSize,
+                  fontSize: fontSize - 2,
+                  onTap: () => navigateWithAuth(AppRoutes.orders),
+                ),
+
+                SizedBox(width: navSpacing),
+
+                NavItem(
+                  icon: Icons.shopping_cart_outlined,
+                  label: 'Cart',
+                  iconSize: iconSize,
+                  fontSize: fontSize - 2,
+                  onTap: () => navigateWithAuth(AppRoutes.cart),
+                ),
+
+                /// ⭐ ONLY PROFILE IS REACTIVE (FIXED)
+                Obx(() {
+                  if (!auth.isLoggedIn.value) return const SizedBox();
+
+                  return Row(
+                    children: [
+                      SizedBox(width: navSpacing),
+                      NavItem(
+                        icon: Icons.person_outline,
+                        label: 'Profile',
+                        iconSize: iconSize,
+                        fontSize: fontSize - 2,
+                        onTap: () => navigateWithAuth(AppRoutes.profile),
+                      ),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  /// slightly larger height for better UI
   @override
   Size get preferredSize => const Size.fromHeight(65);
 }
 
+/// ================= NAV ITEM =================
 class NavItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -172,25 +190,31 @@ class NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final padding = width * 0.012;
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: width * 0.015),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.white, size: iconSize),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: fontSize,
+        padding: EdgeInsets.symmetric(horizontal: padding),
+
+        /// ⭐ Prevent overflow automatically
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: Colors.white, size: iconSize),
+              const SizedBox(height: 1), // reduced from 2
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: fontSize,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

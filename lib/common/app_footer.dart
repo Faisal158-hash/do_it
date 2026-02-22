@@ -14,61 +14,53 @@ class AppFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-
-    // ⭐ responsive breakpoints
     final isMobile = width < 600;
 
-    // ⭐ responsive sizes
     final paddingHorizontal = width * 0.04;
-    final paddingVertical = width * 0.03;
+    final paddingVertical = 12.0; // fixed padding to avoid huge stretch
     final fontSize = isMobile ? 13.0 : 15.0;
     final iconSize = isMobile ? 16.0 : 20.0;
     final circlePadding = isMobile ? 8.0 : 10.0;
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: paddingHorizontal,
-        vertical: paddingVertical,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.green.shade900,
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 8,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-
-      /// ⭐ Responsive layout switch
-      child: isMobile
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildCopyright(fontSize),
-                const SizedBox(height: 10),
-                _buildSocialIcons(iconSize, circlePadding),
-              ],
-            )
-          : Row(
-              children: [
-                Expanded(child: Container()),
-                _buildCopyright(fontSize),
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: _buildSocialIcons(iconSize, circlePadding),
-                  ),
-                ),
-              ],
+    return SafeArea(
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(
+          horizontal: paddingHorizontal,
+          vertical: paddingVertical,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.green.shade900,
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 8,
+              offset: Offset(0, -2),
             ),
+          ],
+        ),
+        child: isMobile
+            ? Column(
+                mainAxisSize: MainAxisSize.min, // important to prevent full screen
+                children: [
+                  _buildCopyright(fontSize),
+                  const SizedBox(height: 8),
+                  _buildSocialIcons(iconSize, circlePadding),
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min, // important
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildCopyright(fontSize),
+                  _buildSocialIcons(iconSize, circlePadding),
+                ],
+              ),
+      ),
     );
   }
 
   // ================= COPYRIGHT =================
-
   Widget _buildCopyright(double fontSize) {
     return Text(
       '© Kisan Traders 2026',
@@ -82,7 +74,6 @@ class AppFooter extends StatelessWidget {
   }
 
   // ================= SOCIAL ICONS =================
-
   Widget _buildSocialIcons(double iconSize, double padding) {
     return Wrap(
       spacing: 10,
@@ -109,7 +100,6 @@ class AppFooter extends StatelessWidget {
   }
 
   // ================= URL LAUNCH =================
-
   void _launchURL(String url) async {
     final uri = Uri.parse(url);
     if (!await launchUrl(uri)) {
