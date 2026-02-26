@@ -166,23 +166,24 @@ class _ProductViewState extends State<ProductView> {
 
             /// FLOATING WIDGETS (TEMPERATURE & DATETIME)
             SafeArea(
-  child: Column(
-    mainAxisSize: MainAxisSize.min, // ⭐ takes only needed height
-    mainAxisAlignment: MainAxisAlignment.end,
-    crossAxisAlignment: CrossAxisAlignment.end,
-    children: [
-      Padding(
-        padding: const EdgeInsets.only(right: 20, bottom: 8), // reduced space
-        child: TemperatureWidget(),
+  child: Align(
+    alignment: Alignment.bottomRight,
+    child: Padding(
+      padding: const EdgeInsets.only(right: 20, bottom: 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          TemperatureWidget(),
+          const SizedBox(height: 8),
+          const DateTimeWidget(),
+        ],
       ),
-      Padding(
-        padding: const EdgeInsets.only(right: 20, bottom: 8), // reduced space
-        child: const DateTimeWidget(),
-      ),
-    ],
-  ),
-)
+    ),
+ )
+            )
           ],
+        
         ),
       ),
     );

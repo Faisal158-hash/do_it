@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class BannerCard extends StatelessWidget {
-  final String image;
+  final String image; // Can be URL or local path
   final String title;
   final String subtitle;
 
@@ -21,7 +21,36 @@ class BannerCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(image, fit: BoxFit.cover),
+            // ✅ Use network image with error handling
+            Image.network(
+              image,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                // Show placeholder if network image fails
+                return Image.network(
+                  image,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Center(child: Icon(Icons.broken_image));
+                  },
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                );
+              },
+              loadingBuilder: (context, child, progress) {
+                if (progress == null) return child;
+                return Center(
+                  child: CircularProgressIndicator(
+                    value: progress.expectedTotalBytes != null
+                        ? progress.cumulativeBytesLoaded /
+                              progress.expectedTotalBytes!
+                        : null,
+                  ),
+                );
+              },
+            ),
 
             // Gradient overlay
             Container(

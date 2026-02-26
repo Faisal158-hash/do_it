@@ -1,5 +1,5 @@
 import 'package:do_it/common/temperature_widget.dart';
-import 'package:do_it/modules/home/home_supabase_controller.dart';
+import 'package:do_it/modules/home/banner_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../common/app_header.dart';
@@ -15,15 +15,13 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  late HomeSupabaseController data;
   late HomeController controller;
 
   @override
   void initState() {
     super.initState();
-    data = Get.put(HomeSupabaseController(), permanent: true);
-    controller = Get.put(HomeController(), permanent: true);
-    controller.startAutoSlide();
+    controller = Get.put<HomeController>(HomeController(), permanent: true);
+    // Auto-slide will start after banners are loaded in the controller
   }
 
   @override
@@ -39,7 +37,7 @@ class _HomeViewState extends State<HomeView> {
       body: Stack(
         children: [
           RefreshIndicator(
-            onRefresh: () async => data.fetchAll(),
+            onRefresh: () async => controller.refreshData(),
             child: LayoutBuilder(builder: (context, constraints) {
               final isMobile = constraints.maxWidth < 600;
               final horizontalPadding = isMobile ? 12.0 : 24.0;
@@ -82,29 +80,29 @@ class _HomeViewState extends State<HomeView> {
 
   // ---------------- SEARCH BAR ----------------
   Widget _searchBar(BuildContext context) {
-  return Center(
-    child: SizedBox(
-      width: MediaQuery.of(context).size.width * 0.5, // 50% screen width
-      child: TextField(
-        decoration: InputDecoration(
-          hintText: 'Search crops, markets, services...',
-          prefixIcon: const Icon(Icons.search),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
+    return Center(
+      child: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.5, // 50% screen width
+        child: TextField(
+          decoration: InputDecoration(
+            hintText: 'Search crops, markets, services...',
+            prefixIcon: const Icon(Icons.search),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   // ---------------- BANNER SLIDER ----------------
   Widget _bannerSlider(BoxConstraints constraints) {
@@ -112,22 +110,22 @@ class _HomeViewState extends State<HomeView> {
     return SizedBox(
       height: height,
       child: Obx(() {
-        if (data.banners.isEmpty) return const Center(child: CircularProgressIndicator());
+        if (controller.banners.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
         return PageView.builder(
           controller: controller.pageController,
-          itemCount: data.banners.length,
+          itemCount: controller.banners.length,
+          onPageChanged: controller.onPageChanged,
           itemBuilder: (context, index) {
-            final banner = data.banners[index];
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.network(
-                banner['image_url'] ?? '',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                loadingBuilder: (context, child, progress) =>
-                    progress == null ? child : const Center(child: CircularProgressIndicator()),
-                errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.error)),
-              ),
+            final banner = controller.banners[index];
+            final imageUrl = banner['image_url'] ?? '';
+            return BannerCard(
+              image: imageUrl.isNotEmpty
+                  ? imageUrl
+                  : 'assets/images/placeholder_banner.jpg', // fallback
+              title: banner['title'] ?? 'Kisan Traders',
+              subtitle: banner['subtitle'] ?? '',
             );
           },
         );
@@ -163,12 +161,12 @@ class _HomeViewState extends State<HomeView> {
       child: SizedBox(
         height: constraints.maxWidth < 600 ? 120 : 140,
         child: Obx(() {
-          if (data.categories.isEmpty) return const Center(child: CircularProgressIndicator());
+          if (controller.categories.isEmpty) return const Center(child: CircularProgressIndicator());
           return ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: data.categories.length,
+            itemCount: controller.categories.length,
             itemBuilder: (context, index) {
-              final category = data.categories[index];
+              final category = controller.categories[index];
               final width = constraints.maxWidth < 600 ? 140.0 : 180.0;
               return Container(
                 width: width,
@@ -176,8 +174,8 @@ class _HomeViewState extends State<HomeView> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(int.tryParse(category['gradient_start']) ?? 0xFF4CAF50),
-                      Color(int.tryParse(category['gradient_end']) ?? 0xFF81C784),
+                      Color(int.tryParse(category['gradient_start'] ?? '') ?? 0xFF4CAF50),
+                      Color(int.tryParse(category['gradient_end'] ?? '') ?? 0xFF81C784),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -209,14 +207,14 @@ class _HomeViewState extends State<HomeView> {
       child: SizedBox(
         height: constraints.maxWidth < 600 ? 180 : 200,
         child: Obx(() {
-          if (data.featuredProducts.isEmpty) return const Center(child: CircularProgressIndicator());
+          if (controller.featuredProducts.isEmpty) return const Center(child: CircularProgressIndicator());
           final itemWidth = constraints.maxWidth < 600 ? 140.0 : 180.0;
           return ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: data.featuredProducts.length,
+            itemCount: controller.featuredProducts.length,
             separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
-              final product = data.featuredProducts[index];
+              final product = controller.featuredProducts[index];
               return Container(
                 width: itemWidth,
                 padding: const EdgeInsets.all(12),
@@ -250,9 +248,9 @@ class _HomeViewState extends State<HomeView> {
     return _sectionWrapper(
       title: 'Today Market Rates',
       child: Obx(() {
-        if (data.marketRates.isEmpty) return const Center(child: CircularProgressIndicator());
+        if (controller.marketRates.isEmpty) return const Center(child: CircularProgressIndicator());
         return Column(
-          children: data.marketRates.map((rate) {
+          children: controller.marketRates.map((rate) {
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 6),
               elevation: 3,
@@ -332,14 +330,14 @@ class _HomeViewState extends State<HomeView> {
     return _sectionWrapper(
       title: 'Agriculture News',
       child: Obx(() {
-        if (data.blogs.isEmpty) return const Center(child: CircularProgressIndicator());
+        if (controller.blogs.isEmpty) return const Center(child: CircularProgressIndicator());
         return SizedBox(
           height: height,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: data.blogs.length,
+            itemCount: controller.blogs.length,
             itemBuilder: (context, index) {
-              final blog = data.blogs[index];
+              final blog = controller.blogs[index];
               return Container(
                 width: width,
                 margin: const EdgeInsets.all(12),
