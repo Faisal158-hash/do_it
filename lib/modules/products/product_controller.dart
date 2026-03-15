@@ -5,25 +5,24 @@ import 'product_model.dart';
 class ProductController extends ChangeNotifier {
   final supabase = Supabase.instance.client;
 
-  // =======================
-  // CATEGORIES (STATIC TITLES)
-  // =======================
   final Map<String, String> categories = {
     'animal_feeds': 'Animal Feeds / جانوروں کے لیے خوراک',
     'fertilizers': 'Fertilizers / کھادیں',
     'seeds': 'Seeds / بیج',
-    'farming_tools': 'Farming Tools / زرعی آلات',
+    'farming tools': 'Farming Tools / زرعی آلات',
   };
 
-  // =======================
-  // PRODUCTS (FROM SUPABASE)
-  // =======================
+  // 🔹 Mapping Supabase values → internal keys
+  final Map<String, String> categoryMap = {
+    'Seeds/بیج': 'seeds',
+    'Fertilizers/کھادیں': 'fertilizers',
+    'Animal Feeds/ جانوروں کے لیے خوراک': 'animal_feeds',
+    'Farming Tools/ زرعی آلات': 'farming tools',
+  };
+
   Map<String, List<Product>> productsByCategory = {};
   bool isLoading = true;
 
-  // =======================
-  // CART
-  // =======================
   final List<Product> cart = [];
 
   ProductController() {
@@ -36,14 +35,20 @@ class ProductController extends ChangeNotifier {
       notifyListeners();
 
       final response = await supabase.from('Product').select();
-
       productsByCategory.clear();
 
       for (final item in response) {
         final product = Product.fromMap(item);
+
+        // 🔹 Map Supabase category to Flutter internal key
+        final categoryKey = categoryMap[product.categoryId] ?? product.categoryId;
+
+        // Add product to correct category
         productsByCategory
-            .putIfAbsent(product.categoryId, () => [])
+            .putIfAbsent(categoryKey, () => [])
             .add(product);
+
+        debugPrint('Product fetched: ${product.nameEn}, Category: $categoryKey, Image: ${product.imagePath}');
       }
     } catch (e) {
       debugPrint('Product fetch error: $e');

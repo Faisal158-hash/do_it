@@ -5,10 +5,9 @@ const Map<String, String> categoryNames = {
   "animal_feeds": "Animal Feeds",
   "seeds": "Seeds",
   "fertilizers": "Fertilizers",
-  "farming_tools": "Farming Tools",
+  "farming tools": "Farming Tools", // ✅ fixed from farming_tools
 };
 
-/// Test widget to verify the map is working
 class CategoryTestPage extends StatelessWidget {
   const CategoryTestPage({super.key});
 

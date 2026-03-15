@@ -108,7 +108,7 @@ class AppHeaderView extends StatelessWidget implements PreferredSizeWidget {
                   label: 'Home',
                   iconSize: iconSize,
                   fontSize: fontSize - 2,
-                  onTap: () => navigateWithAuth(AppRoutes.home),
+                  onTap: () => Get.toNamed(AppRoutes.home),
                 ),
 
                 SizedBox(width: navSpacing),

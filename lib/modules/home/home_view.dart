@@ -15,13 +15,28 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  late HomeController controller;
+  late HomeController homeController;
+  late final PageController _bannerController;
 
   @override
   void initState() {
     super.initState();
-    controller = Get.put<HomeController>(HomeController(), permanent: true);
-    // Auto-slide will start after banners are loaded in the controller
+
+    // Use singleton controller
+    if (Get.isRegistered<HomeController>()) {
+      homeController = Get.find<HomeController>();
+    } else {
+      homeController = Get.put(HomeController(), permanent: true);
+    }
+
+    // Local PageController for banner slider only
+    _bannerController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _bannerController.dispose(); // Dispose only local controller
+    super.dispose();
   }
 
   @override
@@ -37,7 +52,7 @@ class _HomeViewState extends State<HomeView> {
       body: Stack(
         children: [
           RefreshIndicator(
-            onRefresh: () async => controller.refreshData(),
+            onRefresh: () async => homeController.refreshData(),
             child: LayoutBuilder(builder: (context, constraints) {
               final isMobile = constraints.maxWidth < 600;
               final horizontalPadding = isMobile ? 12.0 : 24.0;
@@ -82,14 +97,15 @@ class _HomeViewState extends State<HomeView> {
   Widget _searchBar(BuildContext context) {
     return Center(
       child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.5, // 50% screen width
+        width: MediaQuery.of(context).size.width * 0.5,
         child: TextField(
           decoration: InputDecoration(
             hintText: 'Search crops, markets, services...',
             prefixIcon: const Icon(Icons.search),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(30),
               borderSide: BorderSide.none,
@@ -110,20 +126,20 @@ class _HomeViewState extends State<HomeView> {
     return SizedBox(
       height: height,
       child: Obx(() {
-        if (controller.banners.isEmpty) {
+        if (homeController.banners.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
         return PageView.builder(
-          controller: controller.pageController,
-          itemCount: controller.banners.length,
-          onPageChanged: controller.onPageChanged,
+          controller: _bannerController, // use local controller
+          itemCount: homeController.banners.length,
+          onPageChanged: homeController.onPageChanged,
           itemBuilder: (context, index) {
-            final banner = controller.banners[index];
+            final banner = homeController.banners[index];
             final imageUrl = banner['image_url'] ?? '';
             return BannerCard(
               image: imageUrl.isNotEmpty
                   ? imageUrl
-                  : 'assets/images/placeholder_banner.jpg', // fallback
+                  : 'assets/images/placeholder_banner.jpg',
               title: banner['title'] ?? 'Kisan Traders',
               subtitle: banner['subtitle'] ?? '',
             );
@@ -144,7 +160,8 @@ class _HomeViewState extends State<HomeView> {
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 10, offset: const Offset(0, 5)),
+          BoxShadow(
+              color: Colors.black12, blurRadius: 10, offset: const Offset(0, 5)),
         ],
       ),
       child: const Text(
@@ -161,12 +178,14 @@ class _HomeViewState extends State<HomeView> {
       child: SizedBox(
         height: constraints.maxWidth < 600 ? 120 : 140,
         child: Obx(() {
-          if (controller.categories.isEmpty) return const Center(child: CircularProgressIndicator());
+          if (homeController.categories.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
           return ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: controller.categories.length,
+            itemCount: homeController.categories.length,
             itemBuilder: (context, index) {
-              final category = controller.categories[index];
+              final category = homeController.categories[index];
               final width = constraints.maxWidth < 600 ? 140.0 : 180.0;
               return Container(
                 width: width,
@@ -174,13 +193,18 @@ class _HomeViewState extends State<HomeView> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(int.tryParse(category['gradient_start'] ?? '') ?? 0xFF4CAF50),
-                      Color(int.tryParse(category['gradient_end'] ?? '') ?? 0xFF81C784),
+                      Color(int.tryParse(category['gradient_start'] ?? '') ??
+                          0xFF4CAF50),
+                      Color(int.tryParse(category['gradient_end'] ?? '') ??
+                          0xFF81C784),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(color: Colors.black12, blurRadius: 6, offset: const Offset(0, 4)),
+                    BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: const Offset(0, 4)),
                   ],
                 ),
                 child: Center(
@@ -207,14 +231,16 @@ class _HomeViewState extends State<HomeView> {
       child: SizedBox(
         height: constraints.maxWidth < 600 ? 180 : 200,
         child: Obx(() {
-          if (controller.featuredProducts.isEmpty) return const Center(child: CircularProgressIndicator());
+          if (homeController.featuredProducts.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
           final itemWidth = constraints.maxWidth < 600 ? 140.0 : 180.0;
           return ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: controller.featuredProducts.length,
+            itemCount: homeController.featuredProducts.length,
             separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
-              final product = controller.featuredProducts[index];
+              final product = homeController.featuredProducts[index];
               return Container(
                 width: itemWidth,
                 padding: const EdgeInsets.all(12),
@@ -222,7 +248,10 @@ class _HomeViewState extends State<HomeView> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(color: Colors.black12, blurRadius: 6, offset: const Offset(0, 4)),
+                    BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: const Offset(0, 4)),
                   ],
                 ),
                 child: Column(
@@ -230,9 +259,11 @@ class _HomeViewState extends State<HomeView> {
                   children: [
                     const Icon(Icons.agriculture, size: 40, color: Colors.green),
                     const SizedBox(height: 8),
-                    Text(product['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(product['name'] ?? '',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text("Rs. ${product['price']}", style: const TextStyle(color: Colors.green)),
+                    Text("Rs. ${product['price']}",
+                        style: const TextStyle(color: Colors.green)),
                   ],
                 ),
               );
@@ -248,13 +279,16 @@ class _HomeViewState extends State<HomeView> {
     return _sectionWrapper(
       title: 'Today Market Rates',
       child: Obx(() {
-        if (controller.marketRates.isEmpty) return const Center(child: CircularProgressIndicator());
+        if (homeController.marketRates.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
         return Column(
-          children: controller.marketRates.map((rate) {
+          children: homeController.marketRates.map((rate) {
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 6),
               elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: ListTile(
                 leading: const Icon(Icons.trending_up, color: Colors.green),
                 title: Text(rate['crop_name'] ?? ''),
@@ -273,9 +307,18 @@ class _HomeViewState extends State<HomeView> {
   // ---------------- TESTIMONIALS ----------------
   Widget _testimonials(BoxConstraints constraints) {
     final testimonials = [
-      {"name": "Farmer Ali", "text": "Kisan Traders helped me sell crops at better prices."},
-      {"name": "Farmer Sana", "text": "I got real-time market rates and sold my wheat profitably."},
-      {"name": "Farmer Bilal", "text": "The platform is easy to use and very reliable."},
+      {
+        "name": "Farmer Ali",
+        "text": "Kisan Traders helped me sell crops at better prices."
+      },
+      {
+        "name": "Farmer Sana",
+        "text": "I got real-time market rates and sold my wheat profitably."
+      },
+      {
+        "name": "Farmer Bilal",
+        "text": "The platform is easy to use and very reliable."
+      },
     ];
 
     final width = constraints.maxWidth < 600 ? 250.0 : 300.0;
@@ -297,7 +340,10 @@ class _HomeViewState extends State<HomeView> {
                 borderRadius: BorderRadius.circular(20),
                 color: Colors.green.shade400,
                 boxShadow: [
-                  BoxShadow(color: Colors.black12, blurRadius: 6, offset: const Offset(0, 4)),
+                  BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 6,
+                      offset: const Offset(0, 4)),
                 ],
               ),
               child: Column(
@@ -330,14 +376,16 @@ class _HomeViewState extends State<HomeView> {
     return _sectionWrapper(
       title: 'Agriculture News',
       child: Obx(() {
-        if (controller.blogs.isEmpty) return const Center(child: CircularProgressIndicator());
+        if (homeController.blogs.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
         return SizedBox(
           height: height,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: controller.blogs.length,
+            itemCount: homeController.blogs.length,
             itemBuilder: (context, index) {
-              final blog = controller.blogs[index];
+              final blog = homeController.blogs[index];
               return Container(
                 width: width,
                 margin: const EdgeInsets.all(12),
@@ -345,14 +393,18 @@ class _HomeViewState extends State<HomeView> {
                   borderRadius: BorderRadius.circular(16),
                   color: Colors.green.shade300,
                   boxShadow: [
-                    BoxShadow(color: Colors.black12, blurRadius: 6, offset: const Offset(0, 4)),
+                    BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: const Offset(0, 4)),
                   ],
                 ),
                 child: Column(
                   children: [
                     Expanded(
                       child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16)),
                         child: Image.network(
                           blog['image_url'] ?? '',
                           fit: BoxFit.cover,

@@ -1,4 +1,3 @@
-// ignore: depend_on_referenced_packages
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -7,7 +6,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class HomeController extends GetxController {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  // ---------------- OBSERVABLE DATA ----------------
   var banners = <Map<String, dynamic>>[].obs;
   var categories = <Map<String, dynamic>>[].obs;
   var featuredProducts = <Map<String, dynamic>>[].obs;
@@ -16,16 +14,14 @@ class HomeController extends GetxController {
 
   var isLoading = false.obs;
 
-  // ---------------- PAGE CONTROLLER ----------------
-  final PageController pageController = PageController();
+  final PageController pageController = Get.put(PageController());
   int currentPage = 0;
   Timer? _timer;
 
-  // ---------------- LIFECYCLE ----------------
   @override
   void onInit() {
     super.onInit();
-    fetchAll(); // fetch all home data
+    fetchAll();
   }
 
   @override
@@ -35,9 +31,6 @@ class HomeController extends GetxController {
     super.onClose();
   }
 
-  // =====================================================
-  // ⭐ MASTER FETCH (used by HomeView)
-  // =====================================================
   Future<void> fetchAll() async {
     await fetchHomeData();
   }
@@ -54,9 +47,12 @@ class HomeController extends GetxController {
         fetchBlogs(),
       ]);
 
-      // After fetching banners, setup page slider
-      setBannerCount(banners.length);
-      startAutoSlide();
+      // Delay auto-slide until after first frame
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (banners.isNotEmpty) {
+          startAutoSlide();
+        }
+      });
     } catch (e) {
       print("Home data error: $e");
     } finally {
@@ -64,9 +60,6 @@ class HomeController extends GetxController {
     }
   }
 
-  // =====================================================
-  // HERO BANNERS
-  // =====================================================
   Future<void> fetchBanners() async {
     try {
       final response = await _supabase
@@ -77,20 +70,16 @@ class HomeController extends GetxController {
 
       banners.value = List<Map<String, dynamic>>.from(response);
 
-      // Optional: Add placeholder if no banners
       if (banners.isEmpty) {
-        banners.add({'image_url': ''}); // empty string will trigger placeholder
+        banners.add({'image_url': ''});
       }
     } catch (e) {
       print("Banner error: $e");
       banners.clear();
-      banners.add({'image_url': ''}); // fallback placeholder
+      banners.add({'image_url': ''});
     }
   }
 
-  // =====================================================
-  // CATEGORIES
-  // =====================================================
   Future<void> fetchCategories() async {
     try {
       final response = await _supabase
@@ -106,9 +95,6 @@ class HomeController extends GetxController {
     }
   }
 
-  // =====================================================
-  // FEATURED PRODUCTS
-  // =====================================================
   Future<void> fetchFeaturedProducts() async {
     try {
       final response = await _supabase
@@ -124,9 +110,6 @@ class HomeController extends GetxController {
     }
   }
 
-  // =====================================================
-  // MARKET RATES
-  // =====================================================
   Future<void> fetchMarketRates() async {
     try {
       final response = await _supabase
@@ -141,9 +124,6 @@ class HomeController extends GetxController {
     }
   }
 
-  // =====================================================
-  // BLOGS
-  // =====================================================
   Future<void> fetchBlogs() async {
     try {
       final response = await _supabase
@@ -159,18 +139,7 @@ class HomeController extends GetxController {
     }
   }
 
-  // =====================================================
-  // AUTO SLIDE BANNER ----------------
-  // =====================================================
-  void setBannerCount(int count) {
-    if (count == 0) return;
-
-    if (currentPage >= count) {
-      currentPage = 0;
-      if (pageController.hasClients) pageController.jumpToPage(0);
-    }
-  }
-
+  // ---------------- SAFE AUTO-SLIDE ----------------
   void startAutoSlide() {
     _timer?.cancel();
     if (banners.length <= 1) return;
@@ -191,9 +160,6 @@ class HomeController extends GetxController {
     currentPage = index;
   }
 
-  // =====================================================
-  // ⭐ REFRESH DATA (Pull-to-refresh)
-  // =====================================================
   Future<void> refreshData() async {
     await fetchAll();
   }

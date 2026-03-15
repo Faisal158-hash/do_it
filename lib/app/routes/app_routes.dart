@@ -34,7 +34,7 @@ class AppRoutes {
     ),
 
     // Products
-    GetPage(name: product, page: () => const ProductView(product: null)),
+    GetPage(name: product, page: () => ProductView(product: null,)),
 
     // Cart
     GetPage(
@@ -48,7 +48,7 @@ class AppRoutes {
     // Orders
     GetPage(
       name: orders,
-      page: () => const OrderPage(productId: ''),
+      page: () => const OrderPage(productId: '', customerPhone: '',),
       binding: BindingsBuilder(() {
         Get.put(OrderController());
       }),

@@ -16,7 +16,7 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  final controller = Get.put(ProfileController());
+  final profilecontroller = Get.put(ProfileController());
   final auth = Get.find<AuthController>();
 
   final Map<String, TextEditingController> fieldControllers = {};
@@ -44,7 +44,7 @@ class _ProfileViewState extends State<ProfileView> {
   void _initializeControllers() {
     if (isInitialized) return;
 
-    final profile = controller.profile.value;
+    final profile = profilecontroller.profile.value;
 
     final fields = {
       "Full Name": profile?.name ?? auth.userName.value,
@@ -76,14 +76,14 @@ class _ProfileViewState extends State<ProfileView> {
         children: [
           RefreshIndicator(
             onRefresh: () async {
-              await controller.fetchProfile();
+              await profilecontroller.fetchProfile();
               setState(() => isInitialized = false);
             },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
               child: Obx(() {
-                if (controller.isLoading.value) {
+                if (profilecontroller.isLoading.value) {
                   return const SizedBox(
                       height: 400,
                       child: Center(child: CircularProgressIndicator()));
@@ -205,7 +205,7 @@ class _ProfileViewState extends State<ProfileView> {
           ),
         ),
         onPressed: () {
-          controller.updateProfile(
+          profilecontroller.updateProfile(
             name: fieldControllers["Full Name"]?.text ?? "",
             phone: fieldControllers["Phone Number"]?.text ?? "",
           );
@@ -230,7 +230,7 @@ class _ProfileViewState extends State<ProfileView> {
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        onPressed: controller.logout,
+        onPressed: profilecontroller.logout,
       ),
     );
   }

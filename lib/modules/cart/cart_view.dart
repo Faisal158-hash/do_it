@@ -13,7 +13,7 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  final controller = CartController();
+  final cartcontroller = CartController();
 
   Future<void> refresh() async {
     setState(() {});
@@ -42,7 +42,7 @@ class _CartPageState extends State<CartPage> {
         children: [
           /// CART ITEMS
           FutureBuilder(
-            future: controller.fetchCartItems(),
+            future: cartcontroller.fetchCartItems(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -120,7 +120,7 @@ class _CartPageState extends State<CartPage> {
                           trailing: IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
                             onPressed: () async {
-                              await controller.removeItem(item['id']);
+                              await cartcontroller.removeItem(item['id']);
                               refresh();
                             },
                           ),
