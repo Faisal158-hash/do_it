@@ -4,25 +4,66 @@ import 'order_model.dart';
 class OrderService {
   final supabase = Supabase.instance.client;
 
+  /// 🔹 CREATE ORDER
   Future<void> createOrder(OrderModel order) async {
-    await supabase.from('orders').insert(order.toMap());
+    try {
+      await supabase.from('orders').insert(order.toMap());
+    } catch (e) {
+      throw Exception("Failed to create order: $e");
+    }
   }
 
+  /// 🔹 FETCH ORDERS (INITIAL LOAD)
   Future<List<OrderModel>> fetchOrders(String customerPhone) async {
-    final response = await supabase
-        .from('orders')
-        .select()
-        .eq('customer_phone', customerPhone)
-        .order('date', ascending: false);
+    try {
+      final response = await supabase
+          .from('orders')
+          .select()
+          .eq('customer_phone', customerPhone)
+          .order('created_at', ascending: false);
 
-    final data = response as List<dynamic>;
-    return data.map((e) => OrderModel.fromMap(e)).toList();
+      final data = response as List<dynamic>;
+      return data.map((e) => OrderModel.fromMap(e)).toList();
+    } catch (e) {
+      throw Exception("Failed to fetch orders: $e");
+    }
   }
 
-  Future<void> cancelOrder(String orderId, String reason) async {
-    await supabase
+  /// 🔹 REAL-TIME STREAM (VERY IMPORTANT)
+  Stream<List<OrderModel>> streamOrders(String customerPhone) {
+    return supabase
         .from('orders')
-        .update({'status': 'Cancelled', 'cancel_reason': reason})
-        .eq('id', orderId);
+        .stream(primaryKey: ['id'])
+        .eq('customer_phone', customerPhone)
+        .order('created_at', ascending: false)
+        .map((data) =>
+            data.map((e) => OrderModel.fromMap(e)).toList());
+  }
+
+  /// 🔹 CANCEL ORDER
+  Future<void> cancelOrder(String orderId, String reason) async {
+    try {
+      await supabase
+          .from('orders')
+          .update({
+            'status': 'cancelled', // lowercase for consistency
+            'cancel_reason': reason,
+          })
+          .eq('id', orderId);
+    } catch (e) {
+      throw Exception("Failed to cancel order: $e");
+    }
+  }
+
+  /// 🔹 UPDATE STATUS (ADMIN / FUTURE USE)
+  Future<void> updateOrderStatus(String orderId, String status) async {
+    try {
+      await supabase
+          .from('orders')
+          .update({'status': status})
+          .eq('id', orderId);
+    } catch (e) {
+      throw Exception("Failed to update status: $e");
+    }
   }
 }

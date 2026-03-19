@@ -1,5 +1,4 @@
-// ignore: depend_on_referenced_packages
-import 'package:get/get.dart';
+import 'package:do_it/modules/products/confirm_order_wrapper.dart';
 import 'package:do_it/splash/splash_screen.dart';
 import 'package:do_it/modules/home/home_view.dart';
 import 'package:do_it/modules/products/product_view.dart';
@@ -9,6 +8,7 @@ import 'package:do_it/modules/profile/profile_view.dart';
 import 'package:do_it/modules/home/home_controller.dart';
 import 'package:do_it/modules/cart/cart_controller.dart';
 import 'package:do_it/modules/orders/orders_controller.dart';
+import 'package:get/get.dart';
 
 class AppRoutes {
   // Route name constants
@@ -18,6 +18,7 @@ class AppRoutes {
   static const orders = '/orders';
   static const cart = '/cart';
   static const profile = '/profile';
+  static const confirmorder = '/confirm-order';
 
   // GetX pages
   static final List<GetPage> routes = [
@@ -34,7 +35,10 @@ class AppRoutes {
     ),
 
     // Products
-    GetPage(name: product, page: () => ProductView(product: null,)),
+    GetPage(
+      name: product,
+      page: () => ProductView(product: null), // Keep existing logic
+    ),
 
     // Cart
     GetPage(
@@ -48,7 +52,7 @@ class AppRoutes {
     // Orders
     GetPage(
       name: orders,
-      page: () => const OrderPage(productId: '', customerPhone: '',),
+      page: () => const OrderPage(productId: '', customerPhone: ''),
       binding: BindingsBuilder(() {
         Get.put(OrderController());
       }),
@@ -56,5 +60,11 @@ class AppRoutes {
 
     // Profile
     GetPage(name: profile, page: () => ProfileView()),
+
+    // Confirm Order Page (using wrapper)
+    GetPage(
+      name: confirmorder,
+      page: () => const ConfirmOrderPageWrapper(),
+    ),
   ];
 }

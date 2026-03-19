@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:do_it/modules/orders/order_model.dart';
 import 'package:do_it/modules/orders/order_service.dart';
 import 'package:flutter/material.dart';
@@ -6,81 +8,109 @@ import 'package:get/get.dart';
 class OrderController extends GetxController {
   final OrderService _service = OrderService();
 
+  /// CUSTOMER INPUT CONTROLLERS
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
   final addressController = TextEditingController();
 
+  /// STATE
   RxList<OrderModel> orders = <OrderModel>[].obs;
   RxBool isLoading = false.obs;
 
-  Future<void> fetchOrders(String customerPhone) async {
-    try {
-      isLoading.value = true;
-      final list = await _service.fetchOrders(customerPhone);
-      orders.assignAll(list);
-    } finally {
-      isLoading.value = false;
-    }
+  /// STREAM SUBSCRIPTION
+  Stream<List<OrderModel>>? orderStream;
+  StreamSubscription<List<OrderModel>>? _subscription;
+
+  /// 🔹 START REAL-TIME LISTENING
+  void listenToOrders(String customerPhone) {
+    isLoading.value = true;
+
+    /// cancel old subscription (IMPORTANT)
+    _subscription?.cancel();
+
+    orderStream = _service.streamOrders(customerPhone);
+
+    _subscription = orderStream!.listen(
+      (data) {
+        orders.assignAll(data);
+        isLoading.value = false;
+      },
+      onError: (error) {
+        print("STREAM ERROR: $error");
+        isLoading.value = false;
+      },
+    );
   }
 
-  Future<bool> placeOrder(String productId, String productName, int quantity,
-      double price) async {
+  /// 🔹 PLACE ORDER (MATCHES SUPABASE)
+  Future<bool> placeOrder({
+    required String productName,
+    String? productNameUr,
+    required String imageUrl,
+    required int quantity,
+    required double price,
+  }) async {
     if (nameController.text.isEmpty ||
         phoneController.text.isEmpty ||
         addressController.text.isEmpty) {
       return false;
     }
 
+    final total = quantity * price;
+
     final order = OrderModel(
-      id: '', // Supabase auto-id
-      productId: productId,
+      id: '',
+
+      /// PRODUCT DATA (MATCH DB)
       productName: productName,
+      productNameUr: productNameUr,
+      imageUrl: imageUrl,
+
+      /// ORDER DATA
       quantity: quantity,
       price: price,
-      status: 'Pending',
+      totalPrice: total.toDouble(),
+      status: 'pending',
+
+      /// CUSTOMER
       customerName: nameController.text,
       customerPhone: phoneController.text,
       customerAddress: addressController.text,
+
+      /// OPTIONAL
+      cancelReason: null,
       date: DateTime.now(),
+      productId: '',
     );
 
     await _service.createOrder(order);
+
     return true;
   }
 
+  /// 🔹 CANCEL ORDER
   Future<void> cancelOrder(String orderId, String reason) async {
     await _service.cancelOrder(orderId, reason);
-    final index = orders.indexWhere((o) => o.id == orderId);
-    if (index != -1) {
-      orders[index] = orders[index].copyWith(
-          status: 'Cancelled', cancelReason: reason); // reactive update
-    }
+    // ✅ No manual update needed (real-time handles it)
   }
 
-  void disposeControllers() {
+  /// 🔹 CLEAR INPUTS
+  void clearFields() {
+    nameController.clear();
+    phoneController.clear();
+    addressController.clear();
+  }
+
+  @override
+  void onClose() {
+    /// dispose controllers
     nameController.dispose();
     phoneController.dispose();
     addressController.dispose();
-  }
-}
 
-extension OrderModelCopy on OrderModel {
-  OrderModel copyWith({
-    String? status,
-    String? cancelReason,
-  }) {
-    return OrderModel(
-      id: id,
-      productId: productId,
-      productName: productName,
-      quantity: quantity,
-      price: price,
-      status: status ?? this.status,
-      customerName: customerName,
-      customerPhone: customerPhone,
-      customerAddress: customerAddress,
-      cancelReason: cancelReason ?? this.cancelReason,
-      date: date,
-    );
+    /// cancel stream (VERY IMPORTANT)
+    _subscription?.cancel();
+
+    super.onClose();
   }
 }
