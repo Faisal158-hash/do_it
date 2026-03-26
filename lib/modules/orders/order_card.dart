@@ -134,7 +134,7 @@ class OrderCard extends StatelessWidget {
 
             const SizedBox(height: 6),
 
-            /// OPTIONAL: EDIT BUTTON
+            // OPTIONAL: EDIT BUTTON
             if (order.status != 'Delivered' && order.status != 'Cancelled')
               SizedBox(
                 width: double.infinity,
@@ -151,7 +151,7 @@ class OrderCard extends StatelessWidget {
     );
   }
 
-  /// REUSABLE ROW ITEM
+  // REUSABLE ROW ITEM
   Widget _rowItem(String title, String value, {bool isBold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
