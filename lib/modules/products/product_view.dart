@@ -49,8 +49,8 @@ class _ProductViewState extends State<ProductView> {
             final crossAxisCount = width > 1000
                 ? 4
                 : width > 700
-                ? 3
-                : 2;
+                    ? 3
+                    : 2;
 
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -90,17 +90,12 @@ class _ProductViewState extends State<ProductView> {
                   // 🔹 Category Sections
                   ...displayCategories.map((categoryKey) {
                     final products =
-                        controller.productsByCategory[categoryKey]?.where((
-                          product,
-                        ) {
-                          return product.nameEn.toLowerCase().contains(
-                                searchQuery,
-                              ) ||
-                              product.nameUr.toLowerCase().contains(
-                                searchQuery,
-                              );
-                        }).toList() ??
-                        [];
+                        controller.productsByCategory[categoryKey]?.where(
+                      (product) {
+                        return product.nameEn.toLowerCase().contains(searchQuery) ||
+                            product.nameUr.toLowerCase().contains(searchQuery);
+                      },
+                    ).toList() ?? [];
 
                     if (products.isEmpty) return const SizedBox();
 
@@ -124,16 +119,25 @@ class _ProductViewState extends State<ProductView> {
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxisCount,
-                                crossAxisSpacing: 16,
-                                mainAxisSpacing: 16,
-                                childAspectRatio: 0.7,
-                              ),
+                            crossAxisCount: crossAxisCount,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 0.7,
+                          ),
                           itemCount: products.length,
                           itemBuilder: (_, index) {
                             return ProductCardPage(
                               product: products[index],
-                              categoryId: categoryKey, onAddToCart: (Product p1) {  },
+                              categoryId: categoryKey,
+                              onAddToCart: (Product p) {
+                                // Optional: directly add to cart from grid
+                                controller.addToCart(p);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Added to Cart")),
+                                );
+                              },
+                              // 🔹 Navigate to ConfirmOrderPage with full details
+                              key: ValueKey(products[index].id),
                             );
                           },
                         ),
@@ -150,8 +154,8 @@ class _ProductViewState extends State<ProductView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TemperatureWidget(),
-            SizedBox(height: 8),
-            DateTimeWidget(),
+            const SizedBox(height: 8),
+            const DateTimeWidget(),
           ],
         ),
       ),

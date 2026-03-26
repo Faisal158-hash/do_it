@@ -9,7 +9,7 @@ class ProductController extends ChangeNotifier {
     'animal_feeds': 'Animal Feeds / جانوروں کے لیے خوراک',
     'fertilizers': 'Fertilizers / کھادیں',
     'seeds': 'Seeds / بیج',
-    'farming tools': 'Farming Tools / زرعی آلات',
+    'farming_tools': 'Farming Tools / زرعی آلات',
   };
 
   // 🔹 Mapping Supabase values → internal keys
@@ -17,7 +17,7 @@ class ProductController extends ChangeNotifier {
     'Seeds/بیج': 'seeds',
     'Fertilizers/کھادیں': 'fertilizers',
     'Animal Feeds/ جانوروں کے لیے خوراک': 'animal_feeds',
-    'Farming Tools/ زرعی آلات': 'farming tools',
+    'Farming Tools/ زرعی آلات': 'farming_tools',
   };
 
   Map<String, List<Product>> productsByCategory = {};
@@ -29,6 +29,7 @@ class ProductController extends ChangeNotifier {
     fetchProducts();
   }
 
+  /// Fetch all products from Supabase including Description and Stock
   Future<void> fetchProducts() async {
     try {
       isLoading = true;
@@ -41,14 +42,15 @@ class ProductController extends ChangeNotifier {
         final product = Product.fromMap(item);
 
         // 🔹 Map Supabase category to Flutter internal key
-        final categoryKey = categoryMap[product.categoryId] ?? product.categoryId;
+        final categoryKey =
+            categoryMap[product.categoryId] ?? product.categoryId;
 
         // Add product to correct category
-        productsByCategory
-            .putIfAbsent(categoryKey, () => [])
-            .add(product);
+        productsByCategory.putIfAbsent(categoryKey, () => []).add(product);
 
-        debugPrint('Product fetched: ${product.nameEn}, Category: $categoryKey, Image: ${product.imagePath}');
+        debugPrint(
+          'Product fetched: ${product.nameEn}, Category: $categoryKey, Image: ${product.imagePath}, Stock: ${product.stock}',
+        );
       }
     } catch (e) {
       debugPrint('Product fetch error: $e');
@@ -57,6 +59,23 @@ class ProductController extends ChangeNotifier {
       notifyListeners();
     }
   }
+  /// Fetch single product by ID (optional: for lazy loading on View Details)
+  Future<Product?> fetchProductById(String id) async {
+  try {
+    final response = await supabase
+        .from('Product')
+        .select()
+        .eq('id', id)
+        .maybeSingle(); // ← replaced .execute()
+
+    if (response != null) {
+      return Product.fromMap(response);
+    }
+  } catch (e) {
+    debugPrint('Fetch single product error: $e');
+  }
+  return null;
+}
 
   void addToCart(Product product) {
     cart.add(product);

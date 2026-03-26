@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:do_it/modules/products/Confirm_order_page.dart';
+import 'package:flutter/material.dart';
 import 'package:do_it/modules/products/product_model.dart';
 
 class ProductCardPage extends StatelessWidget {
@@ -13,8 +13,8 @@ class ProductCardPage extends StatelessWidget {
     required this.categoryId,
     required this.onAddToCart,
   });
-
-  void openConfirmOrderPage(BuildContext context) {
+  /// Navigate to the View Details page
+  void openViewDetailsPage(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -38,7 +38,7 @@ class ProductCardPage extends StatelessWidget {
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => openConfirmOrderPage(context),
+          onTap: () => openViewDetailsPage(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -62,7 +62,7 @@ class ProductCardPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    /// NAME
+                    /// NAME (English)
                     Text(
                       product.nameEn,
                       style: theme.textTheme.titleLarge?.copyWith(
@@ -72,7 +72,7 @@ class ProductCardPage extends StatelessWidget {
 
                     const SizedBox(height: 4),
 
-                    /// URDU NAME
+                    /// NAME (Urdu)
                     Text(
                       product.nameUr,
                       style: theme.textTheme.bodyMedium?.copyWith(
@@ -82,7 +82,7 @@ class ProductCardPage extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    /// PRICE BELOW NAME
+                    /// PRICE
                     Text(
                       "Rs ${product.price}",
                       style: theme.textTheme.titleMedium?.copyWith(
@@ -93,7 +93,7 @@ class ProductCardPage extends StatelessWidget {
 
                     const SizedBox(height: 16),
 
-                    /// DETAILS BUTTON
+                    /// VIEW DETAILS BUTTON
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(
@@ -103,7 +103,7 @@ class ProductCardPage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        onPressed: () => openConfirmOrderPage(context),
+                        onPressed: () => openViewDetailsPage(context),
                         child: const Text("View Details"),
                       ),
                     ),

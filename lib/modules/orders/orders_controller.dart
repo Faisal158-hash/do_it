@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:do_it/modules/orders/order_model.dart';
 import 'package:do_it/modules/orders/order_service.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +24,7 @@ class OrderController extends GetxController {
   void listenToOrders(String customerPhone) {
     isLoading.value = true;
 
-    /// cancel old subscription (IMPORTANT)
+    // Cancel previous subscription
     _subscription?.cancel();
 
     orderStream = _service.streamOrders(customerPhone);
@@ -42,8 +41,9 @@ class OrderController extends GetxController {
     );
   }
 
-  /// 🔹 PLACE ORDER (MATCHES SUPABASE)
+  /// 🔹 PLACE ORDER
   Future<bool> placeOrder({
+    required String productId,
     required String productName,
     String? productNameUr,
     required String imageUrl,
@@ -53,45 +53,94 @@ class OrderController extends GetxController {
     if (nameController.text.isEmpty ||
         phoneController.text.isEmpty ||
         addressController.text.isEmpty) {
+      Get.snackbar(
+        "Error",
+        "Please fill all fields",
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return false;
     }
 
-    final total = quantity * price;
+    isLoading.value = true;
 
-    final order = OrderModel(
-      id: '',
+    try {
+      final total = quantity * price;
 
-      /// PRODUCT DATA (MATCH DB)
-      productName: productName,
-      productNameUr: productNameUr,
-      imageUrl: imageUrl,
+      final order = OrderModel(
+        id: '',
 
-      /// ORDER DATA
-      quantity: quantity,
-      price: price,
-      totalPrice: total.toDouble(),
-      status: 'pending',
+        /// PRODUCT DATA
+        name_en: productName,
+        name_ur: productNameUr,
+        image_url: imageUrl,
 
-      /// CUSTOMER
-      customerName: nameController.text,
-      customerPhone: phoneController.text,
-      customerAddress: addressController.text,
+        /// ORDER DATA
+        quantity: quantity,
+        price: price,
+        total_price: total.toDouble(),
+        status: 'pending',
 
-      /// OPTIONAL
-      cancelReason: null,
-      date: DateTime.now(),
-      productId: '',
-    );
+        /// CUSTOMER
+        customer_name: nameController.text,
+        customer_phone: phoneController.text,
+        customer_address: addressController.text,
 
-    await _service.createOrder(order);
+        /// OPTIONAL
+        cancel_reason: null,
+        created_at: DateTime.now(),
+      );
 
-    return true;
+      await _service.createOrder(order);
+      clearFields();
+
+      Get.snackbar(
+        "Success",
+        "Order Confirmed",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      return true;
+    } catch (e) {
+      Get.snackbar("Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   /// 🔹 CANCEL ORDER
   Future<void> cancelOrder(String orderId, String reason) async {
-    await _service.cancelOrder(orderId, reason);
-    // ✅ No manual update needed (real-time handles it)
+    try {
+      await _service.cancelOrder(orderId, reason);
+
+      Get.snackbar(
+        "Cancelled",
+        "Order has been cancelled",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar("Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
+  /// 🔹 UPDATE ORDER
+  Future<void> updateOrder(
+    String orderId, {
+    int? quantity,
+    double? price,
+    String? status,
+  }) async {
+    try {
+      await _service.updateOrder(orderId, {
+        'quantity': ?quantity,
+        'price': ?price,
+        'status': ?status,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      print("Error updating order: $e");
+      Get.snackbar("Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   /// 🔹 CLEAR INPUTS
@@ -103,12 +152,12 @@ class OrderController extends GetxController {
 
   @override
   void onClose() {
-    /// dispose controllers
+    /// Dispose controllers
     nameController.dispose();
     phoneController.dispose();
     addressController.dispose();
 
-    /// cancel stream (VERY IMPORTANT)
+    /// Cancel subscription
     _subscription?.cancel();
 
     super.onClose();

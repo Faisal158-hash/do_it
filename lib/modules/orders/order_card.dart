@@ -26,17 +26,15 @@ class OrderCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         child: Column(
           children: [
-
             /// TOP ROW (IMAGE + INFO)
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 /// PRODUCT IMAGE
                 ClipRRect(
                   borderRadius: BorderRadius.circular(14),
                   child: Image.network(
-                    order.imageUrl,
+                    order.image_url,
                     height: 80,
                     width: 80,
                     fit: BoxFit.cover,
@@ -52,10 +50,9 @@ class OrderCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       /// NAME ENGLISH
                       Text(
-                        order.productName,
+                        order.name_en,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -65,7 +62,7 @@ class OrderCard extends StatelessWidget {
 
                       /// NAME URDU
                       Text(
-                        order.productNameUr ?? "",
+                        order.name_ur ?? "",
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colors.onSurfaceVariant,
                         ),
@@ -73,7 +70,7 @@ class OrderCard extends StatelessWidget {
 
                       const SizedBox(height: 6),
 
-                      /// STATUS
+                      /// STATUS CHIP
                       _statusChip(order.status, colors),
                     ],
                   ),
@@ -92,17 +89,12 @@ class OrderCard extends StatelessWidget {
               ),
               child: Column(
                 children: [
-
                   _rowItem("Quantity", "${order.quantity} kg"),
                   _rowItem("Price", "Rs ${order.price}"),
                   _rowItem("Total", "Rs $total", isBold: true),
-
                   const SizedBox(height: 6),
-
-                  _rowItem(
-                    "Date",
-                    order.date.toLocal().toString().split(' ')[0],
-                  ),
+                  _rowItem("Date",
+                      order.created_at.toLocal().toString().split(' ')[0]),
                 ],
               ),
             ),
@@ -128,15 +120,29 @@ class OrderCard extends StatelessWidget {
               ),
 
             /// CANCEL REASON
-            if (order.cancelReason != null)
+            if (order.cancel_reason != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
-                  "Reason: ${order.cancelReason}",
+                  "Reason: ${order.cancel_reason}",
                   style: TextStyle(
                     color: colors.error,
                     fontSize: 12,
                   ),
+                ),
+              ),
+
+            const SizedBox(height: 6),
+
+            /// OPTIONAL: EDIT BUTTON
+            if (order.status != 'Delivered' && order.status != 'Cancelled')
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    _showEditDialog(context);
+                  },
+                  child: const Text("Edit Order"),
                 ),
               ),
           ],
@@ -179,9 +185,16 @@ class OrderCard extends StatelessWidget {
         textColor = Colors.blue;
         break;
       case 'pending':
-      default:
         bgColor = Colors.orange.withOpacity(0.15);
         textColor = Colors.orange;
+        break;
+      case 'cancelled':
+        bgColor = Colors.red.withOpacity(0.15);
+        textColor = Colors.red;
+        break;
+      default:
+        bgColor = Colors.grey.withOpacity(0.15);
+        textColor = Colors.grey;
     }
 
     return Container(
@@ -201,7 +214,7 @@ class OrderCard extends StatelessWidget {
     );
   }
 
-  /// MODERN CANCEL DIALOG
+  /// CANCEL DIALOG
   void _showCancelDialog(BuildContext context) {
     final reasonController = TextEditingController();
     final colors = Theme.of(context).colorScheme;
@@ -217,14 +230,11 @@ class OrderCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-
               const Text(
                 "Cancel Order",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-
               const SizedBox(height: 12),
-
               TextField(
                 controller: reasonController,
                 decoration: InputDecoration(
@@ -234,9 +244,7 @@ class OrderCard extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
               Row(
                 children: [
                   Expanded(
@@ -257,6 +265,85 @@ class OrderCard extends StatelessWidget {
                               order.id, reasonController.text);
                           Navigator.pop(context);
                         }
+                      },
+                      child: const Text("Submit"),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// EDIT ORDER DIALOG
+  void _showEditDialog(BuildContext context) {
+    final quantityController =
+        TextEditingController(text: order.quantity.toString());
+    final priceController =
+        TextEditingController(text: order.price.toString());
+
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Edit Order",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: quantityController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: "Quantity",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: priceController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: "Price",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Close"),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        final newQty =
+                            int.tryParse(quantityController.text) ?? order.quantity;
+                        final newPrice =
+                            double.tryParse(priceController.text) ?? order.price;
+
+                        controller.updateOrder(order.id,
+                            quantity: newQty, price: newPrice);
+
+                        Navigator.pop(context);
                       },
                       child: const Text("Submit"),
                     ),

@@ -108,7 +108,6 @@ class _ProfileViewState extends State<ProfileView> {
               }),
             ),
           ),
-
           Positioned(bottom: 120, right: 20, child: TemperatureWidget()),
           const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
@@ -122,8 +121,8 @@ class _ProfileViewState extends State<ProfileView> {
     return Column(
       children: [
         Container(
-          height: 120,
-          width: 120,
+          height: 130,
+          width: 130,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: const LinearGradient(
@@ -131,26 +130,26 @@ class _ProfileViewState extends State<ProfileView> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.green.withOpacity(0.3),
-                blurRadius: 25,
-                spreadRadius: 2,
+                color: Colors.green.withOpacity(0.4),
+                blurRadius: 30,
+                spreadRadius: 4,
               )
             ],
           ),
-          child: const Icon(Icons.person, size: 70, color: Colors.white),
+          child: const Icon(Icons.person, size: 80, color: Colors.white),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         Text(
           auth.userName.value.isEmpty ? "User" : auth.userName.value,
           style: const TextStyle(
-            fontSize: 24,
+            fontSize: 26,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           auth.userEmail.value,
-          style: TextStyle(color: Colors.grey[700], fontSize: 14),
+          style: TextStyle(color: Colors.grey[700], fontSize: 15),
         ),
       ],
     );
@@ -160,21 +159,25 @@ class _ProfileViewState extends State<ProfileView> {
 
   Widget _buildGlassCard(double cardWidth) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(30),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           width: cardWidth,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.75),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.3)),
+            gradient: LinearGradient(
+              colors: [Colors.white.withOpacity(0.35), Colors.white.withOpacity(0.15)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                blurRadius: 25,
+                offset: const Offset(0, 12),
               )
             ],
           ),
@@ -192,24 +195,37 @@ class _ProfileViewState extends State<ProfileView> {
 
   Widget _buildUpdateButton() {
     return SizedBox(
-      width: double.infinity,
+      width: 200,
       height: 55,
-      child: ElevatedButton.icon(
-        icon: const Icon(Icons.save),
-        label: const Text("Update Profile", style: TextStyle(fontSize: 17)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF4CAF50),
-          elevation: 6,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
+      child: ElevatedButton(
         onPressed: () {
           profilecontroller.updateProfile(
             name: fieldControllers["Full Name"]?.text ?? "",
             phone: fieldControllers["Phone Number"]?.text ?? "",
           );
         },
+        style: ButtonStyle(
+          elevation: MaterialStateProperty.all(8),
+          shape: MaterialStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          ),
+          padding: MaterialStateProperty.all(const EdgeInsets.symmetric(vertical: 12)),
+          backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+            if (states.contains(MaterialState.pressed)) {
+              return const Color(0xFF388E3C);
+            }
+            return const Color(0xFF4CAF50);
+          }),
+          shadowColor: MaterialStateProperty.all(Colors.greenAccent.withOpacity(0.4)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.save, size: 22),
+            SizedBox(width: 10),
+            Text("Update Profile", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+          ],
+        ),
       ),
     );
   }
@@ -218,19 +234,28 @@ class _ProfileViewState extends State<ProfileView> {
 
   Widget _buildLogoutButton() {
     return SizedBox(
-      width: double.infinity,
+      width: 200,
       height: 55,
-      child: OutlinedButton.icon(
-        icon: const Icon(Icons.logout, color: Colors.red),
-        label: const Text("Logout",
-            style: TextStyle(fontSize: 17, color: Colors.red)),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Colors.red, width: 2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
+      child: OutlinedButton(
         onPressed: profilecontroller.logout,
+        style: ButtonStyle(
+          side: MaterialStateProperty.all(const BorderSide(color: Colors.red, width: 2)),
+          shape: MaterialStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          ),
+          overlayColor: MaterialStateProperty.all(Colors.red.withOpacity(0.1)),
+          shadowColor: MaterialStateProperty.all(Colors.redAccent.withOpacity(0.3)),
+          elevation: MaterialStateProperty.all(4),
+          padding: MaterialStateProperty.all(const EdgeInsets.symmetric(vertical: 12)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.logout, color: Colors.red),
+            SizedBox(width: 10),
+            Text("Logout", style: TextStyle(fontSize: 17, color: Colors.red, fontWeight: FontWeight.w600)),
+          ],
+        ),
       ),
     );
   }
@@ -247,12 +272,15 @@ class _ProfileViewState extends State<ProfileView> {
           prefixIcon: _getIconForLabel(label),
           labelText: label,
           filled: true,
-          fillColor: Colors.white,
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+          fillColor: Colors.white.withOpacity(0.25),
+          contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 18),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(25),
             borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
           ),
         ),
       ),

@@ -10,25 +10,41 @@ class OrderPage extends StatefulWidget {
 
   const OrderPage({
     super.key,
-    required this.customerPhone, required String productId,
+    required this.customerPhone,
+    required String productId,
   });
 
   @override
   State<OrderPage> createState() => _OrderPageState();
 }
 
-class _OrderPageState extends State<OrderPage> {
+class _OrderPageState extends State<OrderPage>
+    with SingleTickerProviderStateMixin {
   final OrderController controller = Get.put(OrderController());
+  late final AnimationController _animationController;
 
   @override
-void initState() {
-  super.initState();
+  void initState() {
+    super.initState();
 
-  /// Fix: run after first frame
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    controller.listenToOrders(widget.customerPhone);
-  });
-}
+    // Animation controller for list item entrance
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    // Listen to orders after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.listenToOrders(widget.customerPhone);
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -41,37 +57,29 @@ void initState() {
       ),
       bottomNavigationBar: const AppFooter(),
       backgroundColor: colors.surface,
-
       body: Obx(() {
         /// LOADING STATE
         if (controller.isLoading.value) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
-        /// EMPTY STATE (MODERN)
+        /// EMPTY STATE
         if (controller.orders.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-
                 Icon(
                   Icons.shopping_bag_outlined,
-                  size: 80,
+                  size: 90,
                   color: colors.onSurfaceVariant,
                 ),
-
                 const SizedBox(height: 16),
-
                 Text(
                   "No Orders Yet",
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
-
                 const SizedBox(height: 6),
-
                 Text(
                   "Your placed orders will appear here",
                   style: TextStyle(color: colors.onSurfaceVariant),
@@ -81,21 +89,42 @@ void initState() {
           );
         }
 
-        /// LIST VIEW WITH REFRESH
+        /// LIST VIEW WITH REFRESH & MODERN UI
         return RefreshIndicator(
           onRefresh: () async {
             controller.listenToOrders(widget.customerPhone);
           },
           child: ListView.builder(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
             itemCount: controller.orders.length,
             itemBuilder: (context, index) {
               final order = controller.orders[index];
 
-              return OrderCard(
-                order: order,
-                controller: controller,
+              // Fade + Slide animation for each item
+              final animation =
+                  Tween<Offset>(
+                    begin: const Offset(0, 0.1),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: _animationController,
+                      curve: Interval(
+                        index / controller.orders.length,
+                        1.0,
+                        curve: Curves.easeOut,
+                      ),
+                    ),
+                  );
+
+              _animationController.forward();
+
+              return SlideTransition(
+                position: animation,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: OrderCard(order: order, controller: controller),
+                ),
               );
             },
           ),
