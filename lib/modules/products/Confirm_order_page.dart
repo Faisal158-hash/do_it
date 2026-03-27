@@ -1,3 +1,4 @@
+// ignore_for_file: file_names
 import 'package:do_it/common/app_footer.dart';
 import 'package:do_it/common/app_header.dart';
 import 'package:do_it/modules/orders/orders_controller.dart';
@@ -10,11 +11,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class ConfirmOrderPage extends StatefulWidget {
   final Product product;
   const ConfirmOrderPage({super.key, required this.product});
-
   @override
   State<ConfirmOrderPage> createState() => _ConfirmOrderPageState();
 }
-
 class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
   final controller = Get.put(OrderController());
   final productController = Get.put(ProductController());
@@ -51,22 +50,19 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
 
       // Insert into Supabase orders table
       await supabase.from('orders').insert({
-        'product_name': widget.product.nameEn,
+        'name_en': widget.product.nameEn,
         'price': widget.product.price,
         'status': 'confirmed',
         'quantity': quantity,
       });
-
       // Call controller function
       final success = await controller.placeOrder(
-        productId: widget.product.id,
-        productName: widget.product.nameEn,
-        productNameUr: widget.product.nameUr,
-        imageUrl: widget.product.imagePath,
+        name_en: widget.product.nameEn,
+        name_ur: widget.product.nameUr,
+        image_url: widget.product.imagePath,
         quantity: quantity,
         price: widget.product.price,
       );
-
       if (success) {
         controller.clearFields();
         if (mounted) {
@@ -306,10 +302,9 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                         try {
                           // ✅ Call your controller to place the order
                           await controller.placeOrder(
-                            productId: widget.product.id,
-                            productName: widget.product.nameEn,
-                            productNameUr: widget.product.nameUr,
-                            imageUrl: widget.product.imagePath,
+                            name_en: widget.product.nameEn,
+                            name_ur: widget.product.nameUr,
+                            image_url: widget.product.imagePath,
                             quantity: quantity,
                             price: widget.product.price,
                           );

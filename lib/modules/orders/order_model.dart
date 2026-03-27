@@ -40,8 +40,8 @@ class OrderModel {
   /// 🔹 TO MAP (SEND TO SUPABASE)
   Map<String, dynamic> toMap() {
     return {
-      'product_name': name_en,
-      'product_name_ur': name_ur,
+      'name_en': name_en,
+      'name_ur': name_ur,
       'image_url': image_url,
       'quantity': quantity,
       'price': price,
@@ -55,57 +55,62 @@ class OrderModel {
     };
   }
 
-  /// 🔹 FROM MAP (FETCH FROM SUPABASE)
   factory OrderModel.fromMap(Map<String, dynamic> map) {
-    // Parse quantity safely
-    int qty = 1;
-    if (map['quantity'] != null) {
-      qty = map['quantity'] is int
-          ? map['quantity']
-          : int.tryParse(map['quantity'].toString()) ?? 1;
+    // 🔹 Safe parsing helpers
+    String parseString(dynamic value, [String defaultValue = '']) {
+      if (value == null) return defaultValue;
+      return value.toString();
     }
 
-    // Parse price safely
-    double pr = 0.0;
-    if (map['price'] != null) {
-      pr = map['price'] is double
-          ? map['price']
-          : double.tryParse(map['price'].toString()) ?? 0.0;
+    int parseInt(dynamic value, [int defaultValue = 0]) {
+      if (value == null) return defaultValue;
+      if (value is int) return value;
+      return int.tryParse(value.toString()) ?? defaultValue;
     }
 
-    // Calculate total price if missing
-    double total = 0.0;
-    if (map['total_price'] != null) {
-      total = double.tryParse(map['total_price'].toString()) ?? (qty * pr);
-    } else {
-      total = qty * pr;
+    double parseDouble(dynamic value, [double defaultValue = 0.0]) {
+      if (value == null) return defaultValue;
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+      return double.tryParse(value.toString()) ?? defaultValue;
     }
+
+    DateTime parseDateTime(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
+      if (value is String) {
+        return DateTime.tryParse(value) ?? DateTime.now();
+      }
+      return DateTime.now();
+    }
+
+    final qty = parseInt(map['quantity'], 1);
+    final pr = parseDouble(map['price'], 0.0);
+    final total = parseDouble(map['total_price'], qty * pr);
 
     // Status normalization
-    String st = (map['status'] ?? 'pending').toString().toLowerCase();
-    st = st[0].toUpperCase() + st.substring(1); // Capitalize first letter
-
-    // Parse date
-    DateTime dt = DateTime.now();
-    if (map['created_at'] != null) {
-      dt = DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now();
-    }
+    String st = parseString(map['status'], 'Pending').toLowerCase();
+    st = st[0].toUpperCase() + st.substring(1);
 
     return OrderModel(
-      id: map['id']?.toString() ?? '',
-      name_en: map['product_name'] ?? 'Unknown',
-      name_ur: map['product_name_ur'],
-      image_url: map['image_url'] ??
-          'https://via.placeholder.com/150', // fallback image
+      id: parseString(map['id']),
+      name_en: parseString(map['name_en'], 'Unknown'),
+      name_ur: map['name_ur'] != null ? parseString(map['name_ur']) : null,
+      image_url: parseString(
+        map['image_url'],
+        'https://via.placeholder.com/150',
+      ),
       quantity: qty,
       price: pr,
       total_price: total,
       status: st,
-      customer_name: map['customer_name'] ?? '',
-      customer_phone: map['customer_phone'] ?? '',
-      customer_address: map['customer_address'] ?? '',
-      cancel_reason: map['cancel_reason'],
-      created_at: dt,
+      customer_name: parseString(map['customer_name']),
+      customer_phone: parseString(map['customer_phone']),
+      customer_address: parseString(map['customer_address']),
+      cancel_reason: map['cancel_reason'] != null
+          ? parseString(map['cancel_reason'])
+          : null,
+      created_at: parseDateTime(map['created_at']),
     );
   }
 }

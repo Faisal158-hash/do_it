@@ -17,21 +17,20 @@ class OrderController extends GetxController {
   RxBool isLoading = false.obs;
 
   /// STREAM SUBSCRIPTION
-  Stream<List<OrderModel>>? orderStream;
   StreamSubscription<List<OrderModel>>? _subscription;
 
   /// 🔹 START REAL-TIME LISTENING
   void listenToOrders(String customerPhone) {
+    if (customerPhone.isEmpty) return; // prevent empty calls
+
     isLoading.value = true;
 
-    // Cancel previous subscription
+    // cancel previous stream
     _subscription?.cancel();
 
-    orderStream = _service.streamOrders(customerPhone);
-
-    _subscription = orderStream!.listen(
+    _subscription = _service.streamOrders(customerPhone).listen(
       (data) {
-        orders.assignAll(data);
+        orders.assignAll(data); // 🔥 updates UI automatically
         isLoading.value = false;
       },
       onError: (error) {
@@ -43,10 +42,9 @@ class OrderController extends GetxController {
 
   /// 🔹 PLACE ORDER
   Future<bool> placeOrder({
-    required String productId,
-    required String productName,
-    String? productNameUr,
-    required String imageUrl,
+    required String name_en,
+    String? name_ur,
+    required String image_url,
     required int quantity,
     required double price,
   }) async {
@@ -66,31 +64,31 @@ class OrderController extends GetxController {
     try {
       final total = quantity * price;
 
+      /// 🔥 SAVE phone BEFORE clearing
+      final currentPhone = phoneController.text;
+
       final order = OrderModel(
         id: '',
-
-        /// PRODUCT DATA
-        name_en: productName,
-        name_ur: productNameUr,
-        image_url: imageUrl,
-
-        /// ORDER DATA
+        name_en: name_en,
+        name_ur: name_ur,
+        image_url: image_url,
         quantity: quantity,
         price: price,
-        total_price: total.toDouble(),
+        total_price: total,
         status: 'pending',
-
-        /// CUSTOMER
         customer_name: nameController.text,
-        customer_phone: phoneController.text,
+        customer_phone: currentPhone,
         customer_address: addressController.text,
-
-        /// OPTIONAL
         cancel_reason: null,
         created_at: DateTime.now(),
       );
 
       await _service.createOrder(order);
+
+      /// 🔥 FIRST refresh data
+      listenToOrders(currentPhone);
+
+      /// THEN clear fields
       clearFields();
 
       Get.snackbar(
@@ -101,7 +99,11 @@ class OrderController extends GetxController {
 
       return true;
     } catch (e) {
-      Get.snackbar("Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        "Error",
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return false;
     } finally {
       isLoading.value = false;
@@ -111,7 +113,12 @@ class OrderController extends GetxController {
   /// 🔹 CANCEL ORDER
   Future<void> cancelOrder(String orderId, String reason) async {
     try {
+      final currentPhone = phoneController.text;
+
       await _service.cancelOrder(orderId, reason);
+
+      /// refresh list
+      listenToOrders(currentPhone);
 
       Get.snackbar(
         "Cancelled",
@@ -119,7 +126,11 @@ class OrderController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (e) {
-      Get.snackbar("Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        "Error",
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 
@@ -131,15 +142,27 @@ class OrderController extends GetxController {
     String? status,
   }) async {
     try {
-      await _service.updateOrder(orderId, {
-        'quantity': ?quantity,
-        'price': ?price,
-        'status': ?status,
-        'updated_at': DateTime.now().toIso8601String(),
-      });
+      final currentPhone = phoneController.text;
+
+      final Map<String, dynamic> updates = {};
+
+      if (quantity != null) updates['quantity'] = quantity;
+      if (price != null) updates['price'] = price;
+      if (status != null) updates['status'] = status;
+
+      updates['updated_at'] = DateTime.now().toIso8601String();
+
+      await _service.updateOrder(orderId, updates);
+
+      /// refresh list
+      listenToOrders(currentPhone);
     } catch (e) {
       print("Error updating order: $e");
-      Get.snackbar("Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        "Error",
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 
@@ -152,14 +175,10 @@ class OrderController extends GetxController {
 
   @override
   void onClose() {
-    /// Dispose controllers
     nameController.dispose();
     phoneController.dispose();
     addressController.dispose();
-
-    /// Cancel subscription
     _subscription?.cancel();
-
     super.onClose();
   }
 }
