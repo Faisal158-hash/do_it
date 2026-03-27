@@ -43,10 +43,12 @@ class OrderService {
         .order('created_at', ascending: false)
         .map((data) {
       // Each incoming event can be List<dynamic> or Map depending on Supabase
+      // ignore: unnecessary_type_check
       if (data is List) {
         return data
-            .map((e) => OrderModel.fromMap(e as Map<String, dynamic>))
+            .map((e) => OrderModel.fromMap(e))
             .toList();
+      // ignore: dead_code
       } else {
         return [];
       }
