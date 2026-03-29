@@ -10,7 +10,8 @@ class OrderPage extends StatefulWidget {
 
   const OrderPage({
     super.key,
-    required this.customerPhone, required String productId,
+    required this.customerPhone,
+    required String productId,
   });
 
   @override
@@ -32,11 +33,12 @@ class _OrderPageState extends State<OrderPage>
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      /// 🔥 IMPORTANT: sync phone with controller
       controller.phoneController.text = widget.customerPhone;
 
-      /// start listening
+      /// ✅ IMPORTANT: start listening
       controller.listenToOrders(widget.customerPhone);
+
+      _animationController.forward();
     });
   }
 
@@ -51,21 +53,23 @@ class _OrderPageState extends State<OrderPage>
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppHeaderView(
-  pageTitle: 'My Orders',
-  cartCount: 0,
-  ordersCount: controller.orders.length, // still reactive
-),
+      /// ✅ FIX: HEADER MUST BE REACTIVE
+      appBar:AppHeaderView(
+            pageTitle: 'My Orders',
+            cartCount: 0,
+            ordersCount: controller.orders.length,
+          ),
+
       bottomNavigationBar: const AppFooter(),
       backgroundColor: colors.surface,
 
       body: Obx(() {
-        /// LOADING
+        /// 🔄 LOADING
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        /// EMPTY
+        /// 📭 EMPTY STATE
         if (controller.orders.isEmpty) {
           return Center(
             child: Column(
@@ -91,18 +95,24 @@ class _OrderPageState extends State<OrderPage>
           );
         }
 
-        /// LIST
+        /// 📦 MULTIPLE ORDERS LIST
         return RefreshIndicator(
           color: colors.primary,
           onRefresh: () async {
-            controller.listenToOrders(widget.customerPhone);
+            await controller.fetchOrdersOnce(widget.customerPhone);
           },
           child: ListView.builder(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
             itemCount: controller.orders.length,
+
+            /// ✅ FIX: better rendering stability
             itemBuilder: (context, index) {
               final order = controller.orders[index];
+
+              /// prevent animation crash
+              final safeLength =
+                  controller.orders.isEmpty ? 1 : controller.orders.length;
 
               final animation = Tween<Offset>(
                 begin: const Offset(0, 0.1),
@@ -111,22 +121,17 @@ class _OrderPageState extends State<OrderPage>
                 CurvedAnimation(
                   parent: _animationController,
                   curve: Interval(
-                    index / controller.orders.length,
+                    index / safeLength,
                     1.0,
                     curve: Curves.easeOut,
                   ),
                 ),
               );
 
-              if (!_animationController.isAnimating) {
-                _animationController.forward();
-              }
-
               return FadeTransition(
                 opacity: _animationController.drive(
-                  Tween<double>(begin: 0, end: 1).chain(
-                    CurveTween(curve: Curves.easeIn),
-                  ),
+                  Tween<double>(begin: 0, end: 1)
+                      .chain(CurveTween(curve: Curves.easeIn)),
                 ),
                 child: SlideTransition(
                   position: animation,

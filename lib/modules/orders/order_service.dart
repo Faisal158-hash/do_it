@@ -7,13 +7,13 @@ class OrderService {
   /// 🔹 CREATE ORDER
   Future<void> createOrder(OrderModel order) async {
     try {
-      await supabase.from('orders').insert(order.toMap());
+      await supabase.from('orders').insert(order.toMap(forInsert: true));
     } catch (e) {
       throw Exception("Failed to create order: $e");
     }
   }
 
-  /// 🔹 FETCH ORDERS FOR CUSTOMER
+  /// 🔹 FETCH ALL ORDERS FOR CUSTOMER
   Future<List<OrderModel>> fetchOrders(String customerPhone) async {
     try {
       final response = await supabase
@@ -22,37 +22,34 @@ class OrderService {
           .eq('customer_phone', customerPhone)
           .order('created_at', ascending: false);
 
-      if (response == null) return [];
-      final data = response as List<dynamic>;
+      final List<Map<String, dynamic>> data =
+          List<Map<String, dynamic>>.from(response);
 
-      // Parse each map using type-safe OrderModel
-      return data
-          .map((e) => OrderModel.fromMap(e as Map<String, dynamic>))
-          .toList();
+      /// ✅ DEBUG (optional)
+      print("FETCHED ORDERS: ${data.length}");
+
+      return data.map((e) => OrderModel.fromMap(e)).toList();
     } catch (e) {
       throw Exception("Failed to fetch orders: $e");
     }
   }
 
-  /// 🔹 REAL-TIME STREAM
+  /// 🔹 REAL-TIME STREAM (FIXED)
   Stream<List<OrderModel>> streamOrders(String customerPhone) {
     return supabase
         .from('orders')
         .stream(primaryKey: ['id'])
         .eq('customer_phone', customerPhone)
         .order('created_at', ascending: false)
-        .map((data) {
-      // Each incoming event can be List<dynamic> or Map depending on Supabase
-      // ignore: unnecessary_type_check
-      if (data is List) {
-        return data
-            .map((e) => OrderModel.fromMap(e))
-            .toList();
-      // ignore: dead_code
-      } else {
-        return [];
-      }
-    });
+        .map((event) {
+          final List<Map<String, dynamic>> data =
+              List<Map<String, dynamic>>.from(event);
+
+          /// ✅ DEBUG (optional)
+          print("STREAM ORDERS: ${data.length}");
+
+          return data.map((e) => OrderModel.fromMap(e)).toList();
+        });
   }
 
   /// 🔹 CANCEL ORDER
@@ -71,7 +68,7 @@ class OrderService {
     }
   }
 
-  /// 🔹 UPDATE ORDER STATUS (ADMIN OR FIELDS)
+  /// 🔹 UPDATE ORDER STATUS
   Future<void> updateOrderStatus(String orderId, String status) async {
     try {
       await supabase
@@ -86,11 +83,10 @@ class OrderService {
     }
   }
 
-  /// 🔹 UPDATE ORDER (FULL FLEXIBLE METHOD)
+  /// 🔹 UPDATE ORDER (GENERIC)
   Future<void> updateOrder(String orderId, Map<String, dynamic> fields) async {
     try {
       fields['updated_at'] = DateTime.now().toIso8601String();
-
       await supabase.from('orders').update(fields).eq('id', orderId);
     } catch (e) {
       throw Exception("Failed to update order: $e");

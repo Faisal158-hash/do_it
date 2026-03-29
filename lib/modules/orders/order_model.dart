@@ -37,23 +37,28 @@ class OrderModel {
     required this.created_at,
   });
 
-  /// 🔹 TO MAP (SEND TO SUPABASE)
-  Map<String, dynamic> toMap() {
-    return {
-      'name_en': name_en,
-      'name_ur': name_ur,
-      'image_url': image_url,
-      'quantity': quantity,
-      'price': price,
-      'total_price': total_price,
-      'status': status.toLowerCase(),
-      'customer_name': customer_name,
-      'customer_phone': customer_phone,
-      'customer_address': customer_address,
-      'cancel_reason': cancel_reason,
-      'created_at': created_at.toIso8601String(),
-    };
+  Map<String, dynamic> toMap({bool forInsert = true}) {
+  final map = {
+    'name_en': name_en,
+    'name_ur': name_ur,
+    'image_url': image_url,
+    'quantity': quantity,
+    'price': price,
+    'total_price': total_price,
+    'status': status.toLowerCase(),
+    'customer_name': customer_name,
+    'customer_phone': customer_phone,
+    'customer_address': customer_address,
+    'cancel_reason': cancel_reason,
+    'created_at': created_at.toIso8601String(),
+  };
+
+  if (!forInsert) {
+    map['id'] = id; // include id only for updates or stream mapping
   }
+
+  return map;
+}
 
   factory OrderModel.fromMap(Map<String, dynamic> map) {
     // 🔹 Safe parsing helpers
@@ -89,7 +94,7 @@ class OrderModel {
     final total = parseDouble(map['total_price'], qty * pr);
 
     // Status normalization
-    String st = parseString(map['status'], 'Pending').toLowerCase();
+    String st = parseString(map['status'], 'Pending');
     st = st[0].toUpperCase() + st.substring(1);
 
     return OrderModel(
@@ -98,7 +103,7 @@ class OrderModel {
       name_ur: map['name_ur'] != null ? parseString(map['name_ur']) : null,
       image_url: parseString(
         map['image_url'],
-        'https://via.placeholder.com/150',
+        'https://via.placeholder.com/150', // ✅ default placeholder
       ),
       quantity: qty,
       price: pr,
@@ -107,9 +112,8 @@ class OrderModel {
       customer_name: parseString(map['customer_name']),
       customer_phone: parseString(map['customer_phone']),
       customer_address: parseString(map['customer_address']),
-      cancel_reason: map['cancel_reason'] != null
-          ? parseString(map['cancel_reason'])
-          : null,
+      cancel_reason:
+          map['cancel_reason'] != null ? parseString(map['cancel_reason']) : null,
       created_at: parseDateTime(map['created_at']),
     );
   }

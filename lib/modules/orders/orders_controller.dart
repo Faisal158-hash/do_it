@@ -19,18 +19,33 @@ class OrderController extends GetxController {
   /// STREAM SUBSCRIPTION
   StreamSubscription<List<OrderModel>>? _subscription;
 
-  /// 🔹 START REAL-TIME LISTENING
-  void listenToOrders(String customerPhone) {
-    if (customerPhone.isEmpty) return; // prevent empty calls
+  /// ✅ AUTO LOAD WHEN CONTROLLER STARTS
+  @override
+  void onInit() {
+    super.onInit();
+
+    /// ⚠️ IMPORTANT: if phone already exists (saved/login)
+    if (phoneController.text.isNotEmpty) {
+      listenToOrders(phoneController.text);
+    }
+  }
+
+  /// 🔹 LISTEN TO ORDERS WITH INITIAL FETCH
+  void listenToOrders(String customerPhone) async {
+    if (customerPhone.isEmpty) return;
 
     isLoading.value = true;
 
-    // cancel previous stream
-    _subscription?.cancel();
+    /// cancel previous subscription if exists
+    await _subscription?.cancel();
 
+    /// ✅ fetch existing orders once
+    await fetchOrdersOnce(customerPhone);
+
+    /// start real-time stream
     _subscription = _service.streamOrders(customerPhone).listen(
       (data) {
-        orders.assignAll(data); // 🔥 updates UI automatically
+        orders.assignAll(data);
         isLoading.value = false;
       },
       onError: (error) {
@@ -38,6 +53,16 @@ class OrderController extends GetxController {
         isLoading.value = false;
       },
     );
+  }
+
+  /// 🔹 FETCH EXISTING ORDERS ONCE
+  Future<void> fetchOrdersOnce(String customerPhone) async {
+    try {
+      final result = await _service.fetchOrders(customerPhone);
+      orders.assignAll(result);
+    } catch (e) {
+      print("Initial fetch error: $e");
+    }
   }
 
   /// 🔹 PLACE ORDER
@@ -63,8 +88,6 @@ class OrderController extends GetxController {
 
     try {
       final total = quantity * price;
-
-      /// 🔥 SAVE phone BEFORE clearing
       final currentPhone = phoneController.text;
 
       final order = OrderModel(
@@ -85,10 +108,9 @@ class OrderController extends GetxController {
 
       await _service.createOrder(order);
 
-      /// 🔥 FIRST refresh data
+      /// ✅ IMPORTANT: Start listening AFTER first order
       listenToOrders(currentPhone);
 
-      /// THEN clear fields
       clearFields();
 
       Get.snackbar(
@@ -113,12 +135,7 @@ class OrderController extends GetxController {
   /// 🔹 CANCEL ORDER
   Future<void> cancelOrder(String orderId, String reason) async {
     try {
-      final currentPhone = phoneController.text;
-
       await _service.cancelOrder(orderId, reason);
-
-      /// refresh list
-      listenToOrders(currentPhone);
 
       Get.snackbar(
         "Cancelled",
@@ -142,8 +159,6 @@ class OrderController extends GetxController {
     String? status,
   }) async {
     try {
-      final currentPhone = phoneController.text;
-
       final Map<String, dynamic> updates = {};
 
       if (quantity != null) updates['quantity'] = quantity;
@@ -153,9 +168,6 @@ class OrderController extends GetxController {
       updates['updated_at'] = DateTime.now().toIso8601String();
 
       await _service.updateOrder(orderId, updates);
-
-      /// refresh list
-      listenToOrders(currentPhone);
     } catch (e) {
       print("Error updating order: $e");
       Get.snackbar(
@@ -172,6 +184,9 @@ class OrderController extends GetxController {
     phoneController.clear();
     addressController.clear();
   }
+
+  /// 🔔 ORDER COUNT FOR HEADER
+  int get orderCount => orders.length;
 
   @override
   void onClose() {
