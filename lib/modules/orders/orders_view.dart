@@ -20,7 +20,8 @@ class OrderPage extends StatefulWidget {
 
 class _OrderPageState extends State<OrderPage>
     with SingleTickerProviderStateMixin {
-  final OrderController controller = Get.put(OrderController());
+  // Use existing controller
+  final OrderController controller = Get.find<OrderController>();
   late final AnimationController _animationController;
 
   @override
@@ -33,10 +34,28 @@ class _OrderPageState extends State<OrderPage>
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Assign phone
       controller.phoneController.text = widget.customerPhone;
 
-      /// ✅ IMPORTANT: start listening
-      controller.listenToOrders(widget.customerPhone);
+      // Fetch all existing orders first
+      controller.fetchOrdersOnce(widget.customerPhone);
+
+      // Start real-time stream to append new orders
+      controller.subscription?.cancel(); // cancel previous if any
+      controller.subscription =
+          controller.service.streamOrders(widget.customerPhone).listen(
+        (newOrders) {
+          // Append all orders if not already in the list
+          for (var order in newOrders) {
+            if (!controller.orders.any((o) => o.id == order.id)) {
+              controller.orders.add(order);
+            }
+          }
+        },
+        onError: (e) {
+          print("STREAM ERROR: $e");
+        },
+      );
 
       _animationController.forward();
     });
@@ -53,23 +72,20 @@ class _OrderPageState extends State<OrderPage>
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      /// ✅ FIX: HEADER MUST BE REACTIVE
-      appBar:AppHeaderView(
-            pageTitle: 'My Orders',
-            cartCount: 0,
-            ordersCount: controller.orders.length,
-          ),
-
+      appBar: AppHeaderView(
+        pageTitle: 'My Orders',
+        cartCount: 0,
+        ordersCount: controller.orders.length,
+      ),
       bottomNavigationBar: const AppFooter(),
       backgroundColor: colors.surface,
-
       body: Obx(() {
-        /// 🔄 LOADING
+        // Loading state
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        /// 📭 EMPTY STATE
+        // Empty state
         if (controller.orders.isEmpty) {
           return Center(
             child: Column(
@@ -95,7 +111,7 @@ class _OrderPageState extends State<OrderPage>
           );
         }
 
-        /// 📦 MULTIPLE ORDERS LIST
+        // Scrollable list of all orders
         return RefreshIndicator(
           color: colors.primary,
           onRefresh: () async {
@@ -105,12 +121,9 @@ class _OrderPageState extends State<OrderPage>
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
             itemCount: controller.orders.length,
-
-            /// ✅ FIX: better rendering stability
             itemBuilder: (context, index) {
               final order = controller.orders[index];
 
-              /// prevent animation crash
               final safeLength =
                   controller.orders.isEmpty ? 1 : controller.orders.length;
 

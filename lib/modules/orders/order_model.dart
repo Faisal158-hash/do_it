@@ -1,26 +1,21 @@
 class OrderModel {
   final String id;
-
   /// PRODUCT DATA
   final String name_en;
   final String? name_ur;
   final String image_url;
-
   /// ORDER DATA
   final int quantity;
   final double price;
   final double total_price;
   final String status; // "Pending", "Progress", "Delivered", "Cancelled"
-
   /// CUSTOMER DATA
   final String customer_name;
   final String customer_phone;
   final String customer_address;
-
   /// OPTIONAL
   final String? cancel_reason;
   final DateTime created_at;
-
   OrderModel({
     required this.id,
     required this.name_en,
@@ -36,7 +31,6 @@ class OrderModel {
     this.cancel_reason,
     required this.created_at,
   });
-
   Map<String, dynamic> toMap({bool forInsert = true}) {
   final map = {
     'name_en': name_en,
@@ -52,34 +46,28 @@ class OrderModel {
     'cancel_reason': cancel_reason,
     'created_at': created_at.toIso8601String(),
   };
-
   if (!forInsert) {
     map['id'] = id; // include id only for updates or stream mapping
   }
-
   return map;
 }
-
   factory OrderModel.fromMap(Map<String, dynamic> map) {
     // 🔹 Safe parsing helpers
     String parseString(dynamic value, [String defaultValue = '']) {
       if (value == null) return defaultValue;
       return value.toString();
     }
-
     int parseInt(dynamic value, [int defaultValue = 0]) {
       if (value == null) return defaultValue;
       if (value is int) return value;
       return int.tryParse(value.toString()) ?? defaultValue;
     }
-
     double parseDouble(dynamic value, [double defaultValue = 0.0]) {
       if (value == null) return defaultValue;
       if (value is double) return value;
       if (value is int) return value.toDouble();
       return double.tryParse(value.toString()) ?? defaultValue;
     }
-
     DateTime parseDateTime(dynamic value) {
       if (value == null) return DateTime.now();
       if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
@@ -88,15 +76,12 @@ class OrderModel {
       }
       return DateTime.now();
     }
-
     final qty = parseInt(map['quantity'], 1);
     final pr = parseDouble(map['price'], 0.0);
     final total = parseDouble(map['total_price'], qty * pr);
-
     // Status normalization
     String st = parseString(map['status'], 'Pending');
     st = st[0].toUpperCase() + st.substring(1);
-
     return OrderModel(
       id: parseString(map['id']),
       name_en: parseString(map['name_en'], 'Unknown'),

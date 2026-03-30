@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class OrderController extends GetxController {
-  final OrderService _service = OrderService();
+  final OrderService service = OrderService();
 
   /// CUSTOMER INPUT CONTROLLERS
   final nameController = TextEditingController();
@@ -17,53 +17,62 @@ class OrderController extends GetxController {
   RxBool isLoading = false.obs;
 
   /// STREAM SUBSCRIPTION
-  StreamSubscription<List<OrderModel>>? _subscription;
+  StreamSubscription<List<OrderModel>>? subscription;
 
-  /// ✅ AUTO LOAD WHEN CONTROLLER STARTS
   @override
   void onInit() {
     super.onInit();
 
-    /// ⚠️ IMPORTANT: if phone already exists (saved/login)
+    /// ⚠️ if phone already exists (saved/login)
     if (phoneController.text.isNotEmpty) {
       listenToOrders(phoneController.text);
     }
   }
 
-  /// 🔹 LISTEN TO ORDERS WITH INITIAL FETCH
-  void listenToOrders(String customerPhone) async {
-    if (customerPhone.isEmpty) return;
+ void listenToOrders(String customerPhone) async {
+  if (customerPhone.isEmpty) return;
 
-    isLoading.value = true;
+  isLoading.value = true;
 
-    /// cancel previous subscription if exists
-    await _subscription?.cancel();
+  // cancel previous subscription if exists
+  await subscription?.cancel();
 
-    /// ✅ fetch existing orders once
-    await fetchOrdersOnce(customerPhone);
+  // fetch existing orders once
+  await fetchOrdersOnce(customerPhone);
 
-    /// start real-time stream
-    _subscription = _service.streamOrders(customerPhone).listen(
-      (data) {
-        orders.assignAll(data);
-        isLoading.value = false;
-      },
-      onError: (error) {
-        print("STREAM ERROR: $error");
-        isLoading.value = false;
-      },
-    );
+  // start real-time stream
+  subscription = service.streamOrders(customerPhone).listen(
+    (data) {
+      // append only new orders
+      for (var order in data) {
+        if (!orders.any((o) => o.id == order.id)) {
+          orders.insert(0, order); // insert at top
+        }
+      }
+      isLoading.value = false;
+    },
+    onError: (error) {
+      print("STREAM ERROR: $error");
+      isLoading.value = false;
+    },
+  );
+}
+
+Future<void> fetchOrdersOnce(String customerPhone) async {
+  try {
+    final result = await service.fetchOrders(customerPhone);
+
+    // sort by created_at descending
+    result.sort((a, b) => b.created_at.compareTo(a.created_at));
+
+    // assign all fetched orders (initial load)
+    orders.assignAll(result);
+  } catch (e) {
+    print("Initial fetch error: $e");
   }
+}
 
-  /// 🔹 FETCH EXISTING ORDERS ONCE
-  Future<void> fetchOrdersOnce(String customerPhone) async {
-    try {
-      final result = await _service.fetchOrders(customerPhone);
-      orders.assignAll(result);
-    } catch (e) {
-      print("Initial fetch error: $e");
-    }
-  }
+
 
   /// 🔹 PLACE ORDER
   Future<bool> placeOrder({
@@ -106,9 +115,9 @@ class OrderController extends GetxController {
         created_at: DateTime.now(),
       );
 
-      await _service.createOrder(order);
+      await service.createOrder(order);
 
-      /// ✅ IMPORTANT: Start listening AFTER first order
+      /// ✅ Start listening AFTER first order
       listenToOrders(currentPhone);
 
       clearFields();
@@ -135,7 +144,10 @@ class OrderController extends GetxController {
   /// 🔹 CANCEL ORDER
   Future<void> cancelOrder(String orderId, String reason) async {
     try {
-      await _service.cancelOrder(orderId, reason);
+      await service.cancelOrder(orderId, reason);
+
+      // ✅ remove the cancelled order from the list
+      orders.removeWhere((o) => o.id == orderId);
 
       Get.snackbar(
         "Cancelled",
@@ -167,7 +179,28 @@ class OrderController extends GetxController {
 
       updates['updated_at'] = DateTime.now().toIso8601String();
 
-      await _service.updateOrder(orderId, updates);
+      await service.updateOrder(orderId, updates);
+
+      // ✅ Update local list copy
+      final index = orders.indexWhere((o) => o.id == orderId);
+      if (index != -1) {
+        final old = orders[index];
+        orders[index] = OrderModel(
+          id: old.id,
+          name_en: old.name_en,
+          name_ur: old.name_ur,
+          image_url: old.image_url,
+          quantity: quantity ?? old.quantity,
+          price: price ?? old.price,
+          total_price: (quantity ?? old.quantity) * (price ?? old.price),
+          status: status ?? old.status,
+          customer_name: old.customer_name,
+          customer_phone: old.customer_phone,
+          customer_address: old.customer_address,
+          cancel_reason: old.cancel_reason,
+          created_at: old.created_at,
+        );
+      }
     } catch (e) {
       print("Error updating order: $e");
       Get.snackbar(
@@ -193,7 +226,7 @@ class OrderController extends GetxController {
     nameController.dispose();
     phoneController.dispose();
     addressController.dispose();
-    _subscription?.cancel();
+    subscription?.cancel();
     super.onClose();
   }
 }
