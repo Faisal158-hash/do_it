@@ -16,6 +16,7 @@ class OrderModel {
   /// OPTIONAL
   final String? cancel_reason;
   final DateTime created_at;
+  
   OrderModel({
     required this.id,
     required this.name_en,

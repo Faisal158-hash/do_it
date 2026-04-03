@@ -20,7 +20,6 @@ class OrderPage extends StatefulWidget {
 
 class _OrderPageState extends State<OrderPage>
     with SingleTickerProviderStateMixin {
-  // Use existing controller
   final OrderController controller = Get.find<OrderController>();
   late final AnimationController _animationController;
 
@@ -34,28 +33,14 @@ class _OrderPageState extends State<OrderPage>
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Assign phone
+      // Assign phone to controller
       controller.phoneController.text = widget.customerPhone;
 
-      // Fetch all existing orders first
+      // Initialize orders only once
       controller.fetchOrdersOnce(widget.customerPhone);
 
-      // Start real-time stream to append new orders
-      controller.subscription?.cancel(); // cancel previous if any
-      controller.subscription =
-          controller.service.streamOrders(widget.customerPhone).listen(
-        (newOrders) {
-          // Append all orders if not already in the list
-          for (var order in newOrders) {
-            if (!controller.orders.any((o) => o.id == order.id)) {
-              controller.orders.add(order);
-            }
-          }
-        },
-        onError: (e) {
-          print("STREAM ERROR: $e");
-        },
-      );
+      // Start stream only once (controller handles subscription now)
+      controller.listenToOrders(widget.customerPhone);
 
       _animationController.forward();
     });
@@ -75,7 +60,7 @@ class _OrderPageState extends State<OrderPage>
       appBar: AppHeaderView(
         pageTitle: 'My Orders',
         cartCount: 0,
-        ordersCount: controller.orders.length,
+        ordersCount: controller.orderCount,
       ),
       bottomNavigationBar: const AppFooter(),
       backgroundColor: colors.surface,

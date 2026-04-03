@@ -74,72 +74,71 @@ Future<void> fetchOrdersOnce(String customerPhone) async {
 
 
 
-  /// 🔹 PLACE ORDER
   Future<bool> placeOrder({
-    required String name_en,
-    String? name_ur,
-    required String image_url,
-    required int quantity,
-    required double price,
-  }) async {
-    if (nameController.text.isEmpty ||
-        phoneController.text.isEmpty ||
-        addressController.text.isEmpty) {
-      Get.snackbar(
-        "Error",
-        "Please fill all fields",
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return false;
-    }
-
-    isLoading.value = true;
-
-    try {
-      final total = quantity * price;
-      final currentPhone = phoneController.text;
-
-      final order = OrderModel(
-        id: '',
-        name_en: name_en,
-        name_ur: name_ur,
-        image_url: image_url,
-        quantity: quantity,
-        price: price,
-        total_price: total,
-        status: 'pending',
-        customer_name: nameController.text,
-        customer_phone: currentPhone,
-        customer_address: addressController.text,
-        cancel_reason: null,
-        created_at: DateTime.now(),
-      );
-
-      await service.createOrder(order);
-
-      /// ✅ Start listening AFTER first order
-      listenToOrders(currentPhone);
-
-      clearFields();
-
-      Get.snackbar(
-        "Success",
-        "Order Confirmed",
-        snackPosition: SnackPosition.BOTTOM,
-      );
-
-      return true;
-    } catch (e) {
-      Get.snackbar(
-        "Error",
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return false;
-    } finally {
-      isLoading.value = false;
-    }
+  required String name_en,
+  String? name_ur,
+  required String image_url,
+  required int quantity,
+  required double price,
+}) async {
+  if (nameController.text.isEmpty ||
+      phoneController.text.isEmpty ||
+      addressController.text.isEmpty) {
+    Get.snackbar(
+      "Error",
+      "Please fill all fields",
+      snackPosition: SnackPosition.BOTTOM,
+    );
+    return false;
   }
+
+  isLoading.value = true;
+
+  try {
+    final total = quantity * price;
+    final currentPhone = phoneController.text;
+
+    final order = OrderModel(
+      id: '', // server should assign ID
+      name_en: name_en,
+      name_ur: name_ur,
+      image_url: image_url,
+      quantity: quantity,
+      price: price,
+      total_price: total,
+      status: 'pending',
+      customer_name: nameController.text,
+      customer_phone: currentPhone,
+      customer_address: addressController.text,
+      cancel_reason: null,
+      created_at: DateTime.now(),
+    );
+
+    final createdOrder = await service.createOrder(order);
+
+    // ✅ Add new order to list immediately
+    orders.insert(0, createdOrder); // insert at top, reactive UI update
+
+    clearFields();
+
+    Get.snackbar(
+      "Success",
+      "Order Confirmed",
+      snackPosition: SnackPosition.BOTTOM,
+    );
+
+    return true;
+  } catch (e) {
+    Get.snackbar(
+      "Error",
+      e.toString(),
+      snackPosition: SnackPosition.BOTTOM,
+    );
+    return false;
+  } finally {
+    isLoading.value = false;
+  }
+}
 
   /// 🔹 CANCEL ORDER
   Future<void> cancelOrder(String orderId, String reason) async {

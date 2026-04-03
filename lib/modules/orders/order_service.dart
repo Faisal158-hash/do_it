@@ -4,10 +4,16 @@ import 'order_model.dart';
 class OrderService {
   final supabase = Supabase.instance.client;
 
-  /// 🔹 CREATE ORDER
-  Future<void> createOrder(OrderModel order) async {
+  /// 🔹 CREATE ORDER (FIXED FOR SUPABASE)
+  Future<OrderModel> createOrder(OrderModel order) async {
     try {
-      await supabase.from('orders').insert(order.toMap(forInsert: true));
+      final response = await supabase
+          .from('orders')
+          .insert(order.toMap())
+          .select()
+          .single(); // 🔑 return inserted row
+
+      return OrderModel.fromMap(response);
     } catch (e) {
       throw Exception("Failed to create order: $e");
     }
@@ -25,7 +31,6 @@ class OrderService {
       final List<Map<String, dynamic>> data =
           List<Map<String, dynamic>>.from(response);
 
-      /// ✅ DEBUG (optional)
       print("FETCHED ORDERS: ${data.length}");
 
       return data.map((e) => OrderModel.fromMap(e)).toList();
@@ -34,7 +39,7 @@ class OrderService {
     }
   }
 
-  /// 🔹 REAL-TIME STREAM (FIXED)
+  /// 🔹 REAL-TIME STREAM (KEEPED AS IT IS - CORRECT)
   Stream<List<OrderModel>> streamOrders(String customerPhone) {
     return supabase
         .from('orders')
@@ -45,7 +50,6 @@ class OrderService {
           final List<Map<String, dynamic>> data =
               List<Map<String, dynamic>>.from(event);
 
-          /// ✅ DEBUG (optional)
           print("STREAM ORDERS: ${data.length}");
 
           return data.map((e) => OrderModel.fromMap(e)).toList();
@@ -87,6 +91,7 @@ class OrderService {
   Future<void> updateOrder(String orderId, Map<String, dynamic> fields) async {
     try {
       fields['updated_at'] = DateTime.now().toIso8601String();
+
       await supabase.from('orders').update(fields).eq('id', orderId);
     } catch (e) {
       throw Exception("Failed to update order: $e");
