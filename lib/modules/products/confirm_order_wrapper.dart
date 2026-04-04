@@ -9,7 +9,6 @@ class ConfirmOrderPageWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final args = Get.arguments;
-
     // Check if product is passed correctly
     if (args == null || args is! Product) {
       return const Scaffold(
@@ -21,7 +20,6 @@ class ConfirmOrderPageWrapper extends StatelessWidget {
         ),
       );
     }
-
     return ConfirmOrderPage(product: args);
   }
 }

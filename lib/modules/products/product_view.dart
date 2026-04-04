@@ -131,7 +131,7 @@ class _ProductViewState extends State<ProductView> {
                               categoryId: categoryKey,
                               onAddToCart: (Product p) {
                                 // Optional: directly add to cart from grid
-                                controller.addToCart(p);
+                                controller.addToCart(p, categoryKey as int);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(content: Text("Added to Cart")),
                                 );

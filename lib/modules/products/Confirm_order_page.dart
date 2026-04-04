@@ -14,10 +14,13 @@ class ConfirmOrderPage extends StatefulWidget {
   @override
   State<ConfirmOrderPage> createState() => _ConfirmOrderPageState();
 }
+
 class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
   final controller = Get.put(OrderController());
   final productController = Get.put(ProductController());
-  bool isLoading = false;
+
+  bool isLoading = false; // for Confirm Order
+  bool isLoadingCart = false; // for Add to Cart
   int quantity = 1;
   late final String email;
 
@@ -41,54 +44,64 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
         : controller.addressController.text;
   }
 
+  /// ✅ Confirm Order
   Future<void> confirmOrder() async {
-    if (isLoading) return; // prevent duplicate clicks
+    if (isLoading) return;
     setState(() => isLoading = true);
 
     try {
-      final supabase = Supabase.instance.client;
-
-      // Insert into Supabase orders table
-      await supabase.from('orders').insert({
-        'name_en': widget.product.nameEn,
-        'price': widget.product.price,
-        'status': 'confirmed',
-        'quantity': quantity,
-      });
-      // Call controller function
-      final success = await controller.placeOrder(
+      await controller.placeOrder(
         name_en: widget.product.nameEn,
         name_ur: widget.product.nameUr,
         image_url: widget.product.imagePath,
         quantity: quantity,
         price: widget.product.price,
       );
-      if (success) {
-        controller.clearFields();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Order placed successfully")),
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Please fill all fields")),
-          );
-        }
-      }
-    } catch (e) {
-      debugPrint("ERROR: $e");
-    }
 
-    if (mounted) setState(() => isLoading = false);
+      Get.snackbar(
+        "Success",
+        "Order Confirmed",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      controller.clearFields();
+    } catch (e) {
+      Get.snackbar("Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 
-  void addToCart() {
-    productController.addToCart(widget.product);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Added to Cart")));
+  /// ✅ Add to Cart
+  Future<void> addToCart() async {
+    if (isLoadingCart) return;
+    setState(() => isLoadingCart = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+
+      await supabase.from('cart_items').insert({
+        'id': widget.product.id,
+        'name_en': widget.product.nameEn,
+        'name_ur': widget.product.nameUr,
+        'image_url': widget.product.imagePath,
+        'price': widget.product.price,
+        'quantity': quantity,
+        'total_price': widget.product.price * quantity,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      // Optional: update local controller/cart page if you have reactive state
+
+      Get.snackbar(
+        "Success",
+        "Added to Cart",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar("Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      if (mounted) setState(() => isLoadingCart = false);
+    }
   }
 
   @override
@@ -251,7 +264,6 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                 ),
               ],
             ),
-
             const SizedBox(height: 10),
 
             // Total Price
@@ -262,14 +274,19 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                 color: colors.primary,
               ),
             ),
-
             const SizedBox(height: 20),
 
             /// ADD TO CART BUTTON
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                icon: const Icon(Icons.shopping_cart),
+                icon: isLoadingCart
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.shopping_cart),
                 label: const Text("Add to Cart"),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -280,7 +297,6 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                 onPressed: addToCart,
               ),
             ),
-
             const SizedBox(height: 12),
 
             /// CONFIRM ORDER BUTTON
@@ -293,40 +309,7 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                onPressed: isLoading
-                    ? null
-                    : () async {
-                        // ✅ Start loading
-                        setState(() => isLoading = true);
-
-                        try {
-                          // ✅ Call your controller to place the order
-                          await controller.placeOrder(
-                            name_en: widget.product.nameEn,
-                            name_ur: widget.product.nameUr,
-                            image_url: widget.product.imagePath,
-                            quantity: quantity,
-                            price: widget.product.price,
-                          );
-
-                          // ✅ Show success popup
-                          Get.snackbar(
-                            "Success",
-                            "Order Confirmed",
-                            snackPosition: SnackPosition.BOTTOM,
-                          );
-                        } catch (e) {
-                          // ✅ Show error popup
-                          Get.snackbar(
-                            "Error",
-                            e.toString(),
-                            snackPosition: SnackPosition.BOTTOM,
-                          );
-                        } finally {
-                          // ✅ Stop loading
-                          setState(() => isLoading = false);
-                        }
-                      },
+                onPressed: isLoading ? null : confirmOrder,
                 child: isLoading
                     ? const SizedBox(
                         width: 20,
@@ -336,7 +319,6 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
                     : const Text("Confirm Order"),
               ),
             ),
-
             const SizedBox(height: 20),
 
             /// BACK TO PRODUCTS BUTTON
