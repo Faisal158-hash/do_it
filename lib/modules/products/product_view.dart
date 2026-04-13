@@ -44,14 +44,12 @@ class _ProductViewState extends State<ProductView> {
             if (controller.isLoading) {
               return const Center(child: CircularProgressIndicator());
             }
-
             final width = MediaQuery.of(context).size.width;
             final crossAxisCount = width > 1000
                 ? 4
                 : width > 700
                     ? 3
                     : 2;
-
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -131,7 +129,7 @@ class _ProductViewState extends State<ProductView> {
                               categoryId: categoryKey,
                               onAddToCart: (Product p) {
                                 // Optional: directly add to cart from grid
-                                controller.addToCart(p, categoryKey as int);
+                                controller.addToCart(p, );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(content: Text("Added to Cart")),
                                 );
