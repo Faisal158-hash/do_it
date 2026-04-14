@@ -1,12 +1,29 @@
 import 'package:do_it/modules/cart/card_service.dart';
+import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'cart_model.dart';
 
-class CartController {
+class CartController extends GetxController {
   final CartService _service = CartService();
   final supabase = Supabase.instance.client;
 
   String get userId => supabase.auth.currentUser!.id;
+
+  var cartItems = <CartModel>[].obs;
+  var isLoading = false.obs;
+
+  @override
+  void onInit() {
+    fetchCartItems();
+    super.onInit();
+  }
+
+  Future<void> fetchCartItems() async {
+    isLoading.value = true;
+    final data = await _service.getCartItems(userId);
+    cartItems.assignAll(data);
+    isLoading.value = false;
+  }
 
   Future<void> addToCart({
     required String nameEn,
@@ -27,14 +44,12 @@ class CartController {
     );
 
     await _service.addToCart(item);
-  }
-
-  Future<List<CartModel>> fetchCartItems() async {
-    return await _service.getCartItems(userId);
+    await fetchCartItems();
   }
 
   Future<void> removeItem(String id) async {
     await _service.removeFromCart(id);
+    await fetchCartItems();
   }
 
   Future<void> placeOrder({
@@ -48,5 +63,7 @@ class CartController {
       address: address,
       phone: phone,
     );
+
+    await fetchCartItems();
   }
 }

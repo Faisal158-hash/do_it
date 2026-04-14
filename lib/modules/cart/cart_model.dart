@@ -38,7 +38,7 @@ class CartModel {
 
   factory CartModel.fromMap(Map<String, dynamic> map) {
     return CartModel(
-      id: map['id'],
+      id: map['id']?.toString(),
       userId: map['user_id'],
       nameEn: map['name_en'],
       nameUr: map['name_ur'],

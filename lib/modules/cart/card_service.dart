@@ -4,7 +4,6 @@ import 'cart_model.dart';
 class CartService {
   final supabase = Supabase.instance.client;
 
-  /// ADD TO CART (WITH DUPLICATE CHECK)
   Future<void> addToCart(CartModel item) async {
     final existing = await supabase
         .from('cart_items')
@@ -25,27 +24,25 @@ class CartService {
     }
   }
 
-  /// FETCH CART (NO JOIN)
   Future<List<CartModel>> getCartItems(String userId) async {
     final response = await supabase
         .from('cart_items')
         .select()
         .eq('user_id', userId);
 
-    return response.map((e) => CartModel.fromMap(e)).toList();
+    return (response as List)
+        .map((e) => CartModel.fromMap(e))
+        .toList();
   }
 
-  /// REMOVE ITEM
   Future<void> removeFromCart(String id) async {
     await supabase.from('cart_items').delete().eq('id', id);
   }
 
-  /// CLEAR CART
   Future<void> clearCart(String userId) async {
     await supabase.from('cart_items').delete().eq('user_id', userId);
   }
 
-  /// PLACE ORDER FROM CART 🔥
   Future<void> placeOrder({
     required String userId,
     required String name,
@@ -60,7 +57,7 @@ class CartService {
     if (cartItems.isEmpty) return;
 
     await supabase.from('orders').insert(
-      cartItems.map((item) {
+      (cartItems as List).map((item) {
         return {
           'name_en': item['name_en'],
           'name_ur': item['name_ur'],
