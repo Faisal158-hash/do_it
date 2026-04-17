@@ -39,16 +39,16 @@ class CartModel {
   factory CartModel.fromMap(Map<String, dynamic> map) {
     return CartModel(
       id: map['id']?.toString(),
-      userId: map['user_id'],
-      nameEn: map['name_en'],
-      nameUr: map['name_ur'],
-      imageUrl: map['image_url'],
-      price: (map['price'] as num).toDouble(),
-      quantity: map['quantity'],
-      stock: map['stock'],
-      totalPrice: (map['total_price'] as num).toDouble(),
+      userId: (map['user_id'] ?? '').toString(),
+      nameEn: (map['name_en'] ?? '').toString(),
+      nameUr: (map['name_ur'] ?? '').toString(),
+      imageUrl: (map['image_url'] ?? '').toString(),
+      price: (map['price'] ?? 0 as num).toDouble(),
+      quantity: (map['quantity'] ?? 0 as num).toInt(),
+      stock: (map['stock'] ?? 0 as num).toInt(),
+      totalPrice: (map['total_price'] ?? 0 as num).toDouble(),
       createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'])
+          ? DateTime.tryParse(map['created_at'].toString())
           : null,
     );
   }

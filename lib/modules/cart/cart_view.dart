@@ -9,7 +9,7 @@ import '../../common/date_time_widget.dart';
 class CartPage extends StatelessWidget {
   CartPage({super.key});
 
-  final CartController controller = Get.put(CartController());
+  final CartController controller = Get.find<CartController>();
 
   void showCheckoutDialog(BuildContext context) {
     final nameController = TextEditingController();
@@ -23,9 +23,18 @@ class CartPage extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: "Name")),
-            TextField(controller: addressController, decoration: const InputDecoration(labelText: "Address")),
-            TextField(controller: phoneController, decoration: const InputDecoration(labelText: "Phone")),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: "Name"),
+            ),
+            TextField(
+              controller: addressController,
+              decoration: const InputDecoration(labelText: "Address"),
+            ),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(labelText: "Phone"),
+            ),
           ],
         ),
         actions: [
@@ -36,6 +45,11 @@ class CartPage extends StatelessWidget {
                 address: addressController.text,
                 phone: phoneController.text,
               );
+
+              nameController.dispose();
+              addressController.dispose();
+              phoneController.dispose();
+
               Navigator.pop(context);
             },
             child: const Text("Place Order"),
@@ -68,12 +82,13 @@ class CartPage extends StatelessWidget {
 
             if (controller.cartItems.isEmpty) {
               return const Center(
-                child: Text("Your cart is empty", style: TextStyle(fontSize: 18)),
+                child: Text(
+                  "Your cart is empty",
+                  style: TextStyle(fontSize: 18),
+                ),
               );
             }
-
             final items = controller.cartItems;
-
             return RefreshIndicator(
               onRefresh: controller.fetchCartItems,
               child: ListView.builder(
@@ -81,7 +96,6 @@ class CartPage extends StatelessWidget {
                 itemCount: items.length,
                 itemBuilder: (_, index) {
                   final item = items[index];
-
                   return Center(
                     child: Container(
                       width: cardWidth,
@@ -101,7 +115,14 @@ class CartPage extends StatelessWidget {
                         contentPadding: const EdgeInsets.all(12),
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: Image.network(item.imageUrl),
+                          child: item.imageUrl.isEmpty
+                              ? const Icon(Icons.image_not_supported)
+                              : Image.network(
+                                  item.imageUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) =>
+                                      const Icon(Icons.broken_image),
+                                ),
                         ),
                         title: Text(
                           item.nameEn,
@@ -117,7 +138,9 @@ class CartPage extends StatelessWidget {
                         ),
                         trailing: IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => controller.removeItem(item.id!),
+                          onPressed: item.id == null
+                              ? null
+                              : () => controller.removeItem(item.id!),
                         ),
                       ),
                     ),

@@ -1,4 +1,4 @@
-import 'package:do_it/modules/cart/card_service.dart';
+import 'package:do_it/modules/cart/cart_service.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'cart_model.dart';
@@ -7,22 +7,31 @@ class CartController extends GetxController {
   final CartService _service = CartService();
   final supabase = Supabase.instance.client;
 
-  String get userId => supabase.auth.currentUser!.id;
+  String? get userId => supabase.auth.currentUser?.id;
 
   var cartItems = <CartModel>[].obs;
   var isLoading = false.obs;
 
   @override
   void onInit() {
-    fetchCartItems();
     super.onInit();
+    fetchCartItems();
   }
 
   Future<void> fetchCartItems() async {
-    isLoading.value = true;
-    final data = await _service.getCartItems(userId);
-    cartItems.assignAll(data);
-    isLoading.value = false;
+    final uid = userId;
+    if (uid == null) return;
+
+    try {
+      isLoading.value = true;
+
+      final data = await _service.getCartItems(uid);
+      cartItems.assignAll(data);
+    } catch (e) {
+      print("Cart fetch error: $e");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> addToCart({
@@ -32,8 +41,11 @@ class CartController extends GetxController {
     required double price,
     required int stock,
   }) async {
+    final uid = userId;
+    if (uid == null) return;
+
     final item = CartModel(
-      userId: userId,
+      userId: uid,
       nameEn: nameEn,
       nameUr: nameUr,
       imageUrl: imageUrl,
@@ -44,6 +56,9 @@ class CartController extends GetxController {
     );
 
     await _service.addToCart(item);
+
+    // safer refresh (gives DB time to commit)
+    await Future.delayed(const Duration(milliseconds: 200));
     await fetchCartItems();
   }
 
@@ -57,8 +72,11 @@ class CartController extends GetxController {
     required String address,
     required String phone,
   }) async {
+    final uid = userId;
+    if (uid == null) return;
+
     await _service.placeOrder(
-      userId: userId,
+      userId: uid,
       name: name,
       address: address,
       phone: phone,

@@ -13,7 +13,8 @@ class CartService {
         .maybeSingle();
 
     if (existing != null) {
-      int newQty = existing['quantity'] + item.quantity;
+      final newQty =
+          (existing['quantity'] as num? ?? 0) + item.quantity;
 
       await supabase.from('cart_items').update({
         'quantity': newQty,
@@ -30,7 +31,9 @@ class CartService {
         .select()
         .eq('user_id', userId);
 
-    return (response as List)
+    final List data = response as List;
+
+    return data
         .map((e) => CartModel.fromMap(e))
         .toList();
   }
@@ -49,29 +52,31 @@ class CartService {
     required String address,
     required String phone,
   }) async {
-    final cartItems = await supabase
+    final response = await supabase
         .from('cart_items')
         .select()
         .eq('user_id', userId);
 
+    final List cartItems = response as List;
+
     if (cartItems.isEmpty) return;
 
-    await supabase.from('orders').insert(
-      (cartItems as List).map((item) {
-        return {
-          'name_en': item['name_en'],
-          'name_ur': item['name_ur'],
-          'image_url': item['image_url'],
-          'price': item['price'],
-          'quantity': item['quantity'],
-          'total_price': item['total_price'],
-          'customer_name': name,
-          'customer_address': address,
-          'customer_phone': phone,
-          'status': 'pending',
-        };
-      }).toList(),
-    );
+    final orders = cartItems.map((item) {
+      return {
+        'name_en': item['name_en'],
+        'name_ur': item['name_ur'],
+        'image_url': item['image_url'],
+        'price': item['price'],
+        'quantity': item['quantity'],
+        'total_price': item['total_price'],
+        'customer_name': name,
+        'customer_address': address,
+        'customer_phone': phone,
+        'status': 'pending',
+      };
+    }).toList();
+
+    await supabase.from('orders').insert(orders);
 
     await clearCart(userId);
   }
