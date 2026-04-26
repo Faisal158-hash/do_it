@@ -1,6 +1,7 @@
 // ignore_for_file: file_names
 import 'package:do_it/common/app_footer.dart';
 import 'package:do_it/common/app_header.dart';
+import 'package:do_it/modules/cart/cart_controller.dart';
 import 'package:do_it/modules/orders/orders_controller.dart';
 import 'package:do_it/modules/products/product_controller.dart';
 import 'package:do_it/modules/products/product_model.dart';
@@ -80,7 +81,6 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
       final supabase = Supabase.instance.client;
 
       await supabase.from('cart_items').insert({
-        'id': widget.product.id,
         'name_en': widget.product.nameEn,
         'name_ur': widget.product.nameUr,
         'image_url': widget.product.imagePath,
@@ -89,6 +89,7 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
         'total_price': widget.product.price * quantity,
         'created_at': DateTime.now().toIso8601String(),
       });
+      Get.find<CartController>().fetchCartItems();
 
       // Optional: update local controller/cart page if you have reactive state
 

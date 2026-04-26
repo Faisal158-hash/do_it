@@ -1,4 +1,4 @@
-import 'package:do_it/modules/cart/cart_service.dart';
+import 'package:do_it/modules/cart/cart_service.dart'; 
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'cart_model.dart';
@@ -11,6 +11,13 @@ class CartController extends GetxController {
 
   var cartItems = <CartModel>[].obs;
   var isLoading = false.obs;
+  var isAdding = false.obs; // 🔥 NEW (prevent double clicks)
+
+  double get totalPrice =>
+      cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
+
+  int get totalItems =>
+      cartItems.fold(0, (sum, item) => sum + item.quantity);
 
   @override
   void onInit() {
@@ -18,13 +25,13 @@ class CartController extends GetxController {
     fetchCartItems();
   }
 
+  // ✅ FETCH
   Future<void> fetchCartItems() async {
     final uid = userId;
     if (uid == null) return;
 
     try {
       isLoading.value = true;
-
       final data = await _service.getCartItems(uid);
       cartItems.assignAll(data);
     } catch (e) {
@@ -34,39 +41,81 @@ class CartController extends GetxController {
     }
   }
 
+  // ✅ ADD TO CART (FIXED + SAFE)
   Future<void> addToCart({
     required String nameEn,
     required String nameUr,
     required String imageUrl,
     required double price,
     required int stock,
+    required int quantity,
   }) async {
+    if (isAdding.value) return; // 🔥 prevent double tap
+    isAdding.value = true;
+
     final uid = userId;
-    if (uid == null) return;
+    if (uid == null) {
+      isAdding.value = false;
+      return;
+    }
 
-    final item = CartModel(
-      userId: uid,
-      nameEn: nameEn,
-      nameUr: nameUr,
-      imageUrl: imageUrl,
-      price: price,
-      quantity: 1,
-      stock: stock,
-      totalPrice: price,
-    );
+    try {
+      final item = CartModel(
+        userId: uid,
+        nameEn: nameEn,
+        nameUr: nameUr,
+        imageUrl: imageUrl,
+        price: price,
+        quantity: quantity, // ✅ FIXED
+        stock: stock,
+        totalPrice: price * quantity, // ✅ FIXED
+      );
 
-    await _service.addToCart(item);
+      final result = await _service.addToCart(item);
 
-    // safer refresh (gives DB time to commit)
-    await Future.delayed(const Duration(milliseconds: 200));
-    await fetchCartItems();
+      if (result != null) {
+        final index = cartItems.indexWhere((e) => e.nameEn == nameEn);
+
+        if (index != -1) {
+          // ✅ update existing item
+          cartItems[index] = cartItems[index].copyWith(
+            quantity: result.quantity,
+            totalPrice: result.totalPrice,
+          );
+        } else {
+          // ✅ add new item
+          cartItems.add(result);
+        }
+      } else {
+        // 🔥 fallback (if service fails silently)
+        await fetchCartItems();
+      }
+
+      Get.snackbar("Success", "Added to Cart");
+    } catch (e) {
+      print("Add to cart error: $e");
+      Get.snackbar("Error", "Failed to add item");
+    } finally {
+      isAdding.value = false;
+    }
   }
 
+  // ✅ REMOVE ITEM
   Future<void> removeItem(String id) async {
-    await _service.removeFromCart(id);
-    await fetchCartItems();
+    try {
+      final success = await _service.removeFromCart(id);
+
+      if (success) {
+        cartItems.removeWhere((e) => e.id == id);
+      } else {
+        await fetchCartItems(); // 🔥 fallback sync
+      }
+    } catch (e) {
+      print("Remove error: $e");
+    }
   }
 
+  // ✅ PLACE ORDER
   Future<void> placeOrder({
     required String name,
     required String address,
@@ -75,13 +124,20 @@ class CartController extends GetxController {
     final uid = userId;
     if (uid == null) return;
 
-    await _service.placeOrder(
-      userId: uid,
-      name: name,
-      address: address,
-      phone: phone,
-    );
+    try {
+      final success = await _service.placeOrder(
+        userId: uid,
+        name: name,
+        address: address,
+        phone: phone,
+      );
 
-    await fetchCartItems();
+      if (success) {
+        cartItems.clear();
+        Get.snackbar("Success", "Order Placed");
+      }
+    } catch (e) {
+      print("Order error: $e");
+    }
   }
 }
