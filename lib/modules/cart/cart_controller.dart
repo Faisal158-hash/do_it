@@ -11,7 +11,7 @@ class CartController extends GetxController {
 
   var cartItems = <CartModel>[].obs;
   var isLoading = false.obs;
-  var isAdding = false.obs; // 🔥 NEW (prevent double clicks)
+  var isAdding = false.obs;
 
   double get totalPrice =>
       cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
@@ -41,16 +41,17 @@ class CartController extends GetxController {
     }
   }
 
-  // ✅ ADD TO CART (FIXED + SAFE)
-  Future<void> addToCart({
+  // ✅ ADD TO CART
+  Future<void> addCart({
     required String nameEn,
     required String nameUr,
     required String imageUrl,
     required double price,
-    required int stock,
+    required String stock,
     required int quantity,
+    required String description, // ✅ ADDED — was missing, CartModel now requires it
   }) async {
-    if (isAdding.value) return; // 🔥 prevent double tap
+    if (isAdding.value) return;
     isAdding.value = true;
 
     final uid = userId;
@@ -66,9 +67,10 @@ class CartController extends GetxController {
         nameUr: nameUr,
         imageUrl: imageUrl,
         price: price,
-        quantity: quantity, // ✅ FIXED
+        quantity: quantity,
         stock: stock,
-        totalPrice: price * quantity, // ✅ FIXED
+        totalPrice: price * quantity,
+        description: description, // ✅ ADDED — was missing from CartModel constructor
       );
 
       final result = await _service.addToCart(item);
@@ -77,17 +79,14 @@ class CartController extends GetxController {
         final index = cartItems.indexWhere((e) => e.nameEn == nameEn);
 
         if (index != -1) {
-          // ✅ update existing item
           cartItems[index] = cartItems[index].copyWith(
             quantity: result.quantity,
             totalPrice: result.totalPrice,
           );
         } else {
-          // ✅ add new item
           cartItems.add(result);
         }
       } else {
-        // 🔥 fallback (if service fails silently)
         await fetchCartItems();
       }
 
@@ -108,21 +107,21 @@ class CartController extends GetxController {
       if (success) {
         cartItems.removeWhere((e) => e.id == id);
       } else {
-        await fetchCartItems(); // 🔥 fallback sync
+        await fetchCartItems();
       }
     } catch (e) {
       print("Remove error: $e");
     }
   }
 
-  // ✅ PLACE ORDER
-  Future<void> placeOrder({
+  // ✅ PLACE ORDER — return bool so cart_view can react correctly
+  Future<bool> placeOrder({ // ✅ FIXED — was Future<void>, view needs Future<bool>
     required String name,
     required String address,
     required String phone,
   }) async {
     final uid = userId;
-    if (uid == null) return;
+    if (uid == null) return false; // ✅ FIXED
 
     try {
       final success = await _service.placeOrder(
@@ -136,8 +135,11 @@ class CartController extends GetxController {
         cartItems.clear();
         Get.snackbar("Success", "Order Placed");
       }
+
+      return success; // ✅ FIXED — now returns actual result to cart_view
     } catch (e) {
       print("Order error: $e");
+      return false; // ✅ FIXED
     }
   }
 }

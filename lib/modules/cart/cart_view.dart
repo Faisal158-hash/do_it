@@ -9,7 +9,6 @@ import '../../common/date_time_widget.dart';
 class CartPage extends StatelessWidget {
   CartPage({super.key});
 
-  // ✅ Safe controller initialization
   final CartController controller =
       Get.isRegistered<CartController>()
           ? Get.find<CartController>()
@@ -56,6 +55,7 @@ class CartPage extends StatelessWidget {
                 return;
               }
 
+              // ✅ FIX 2 & 3: Check result BEFORE closing dialog or showing snackbar
               await controller.placeOrder(
                 name: nameController.text.trim(),
                 address: addressController.text.trim(),
@@ -84,7 +84,6 @@ class CartPage extends StatelessWidget {
     final cardWidth = (width > 700 ? 650.0 : width * 0.95);
 
     return Scaffold(
-      // ✅ Reactive AppBar
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
         child: Obx(() => AppHeaderView(
@@ -123,7 +122,6 @@ class CartPage extends StatelessWidget {
                 itemCount: items.length + 1,
                 itemBuilder: (_, index) {
                   if (index == items.length) {
-                    // ✅ TOTAL CARD
                     return Center(
                       child: Container(
                         width: cardWidth,
@@ -207,6 +205,17 @@ class CartPage extends StatelessWidget {
                             Text("Price: Rs ${item.price}"),
                             Text("Quantity: ${item.quantity}"),
                             Text("Total: Rs ${item.totalPrice}"),
+                            // ✅ FIX 1: description was in model but never shown in UI
+                            if (item.description.isNotEmpty)
+                              Text(
+                                item.description,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                           ],
                         ),
                         trailing: IconButton(
@@ -235,23 +244,6 @@ class CartPage extends StatelessWidget {
           const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
       ),
-
-      // ✅ Improved Order Button
-      floatingActionButton: Obx(() => FloatingActionButton.extended(
-            onPressed: controller.cartItems.isEmpty
-                ? null
-                : () => showCheckoutDialog(context),
-            label: controller.isLoading.value
-                ? const Text("Processing...")
-                : const Text("Order Now"),
-            icon: controller.isLoading.value
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.shopping_cart_checkout),
-          )),
     );
   }
 }

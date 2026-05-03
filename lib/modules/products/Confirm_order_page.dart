@@ -62,7 +62,6 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
       Get.snackbar(
         "Success",
         "Order Confirmed",
-        snackPosition: SnackPosition.BOTTOM,
       );
       controller.clearFields();
     } catch (e) {
@@ -72,38 +71,32 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> {
     }
   }
 
-  /// ✅ Add to Cart
-  Future<void> addToCart() async {
-    if (isLoadingCart) return;
-    setState(() => isLoadingCart = true);
+  /// ✅ Add to Cart — FIXED
+Future<void> addToCart() async {
+  if (isLoadingCart) return;
+  setState(() => isLoading = true);
 
-    try {
-      final supabase = Supabase.instance.client;
+  try {
+    await Get.find<CartController>().addCart(
+      nameEn: widget.product.nameEn,
+      nameUr: widget.product.nameUr,
+      imageUrl: widget.product.imagePath,
+      price: widget.product.price,
+      quantity: quantity,
+      stock: widget.product.stock,   
+      description: widget.product.description, 
+    );
 
-      await supabase.from('cart_items').insert({
-        'name_en': widget.product.nameEn,
-        'name_ur': widget.product.nameUr,
-        'image_url': widget.product.imagePath,
-        'price': widget.product.price,
-        'quantity': quantity,
-        'total_price': widget.product.price * quantity,
-        'created_at': DateTime.now().toIso8601String(),
-      });
-      Get.find<CartController>().fetchCartItems();
-
-      // Optional: update local controller/cart page if you have reactive state
-
-      Get.snackbar(
-        "Success",
-        "Added to Cart",
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } catch (e) {
-      Get.snackbar("Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
-    } finally {
-      if (mounted) setState(() => isLoadingCart = false);
-    }
+    Get.snackbar(
+      "Success",
+      "Added to Cart",
+    );
+  } catch (e) {
+    Get.snackbar("Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
+  } finally {
+    if (mounted) setState(() => isLoadingCart = false);
   }
+}
 
   @override
   Widget build(BuildContext context) {

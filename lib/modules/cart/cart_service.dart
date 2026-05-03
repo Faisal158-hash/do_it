@@ -11,7 +11,7 @@ class CartService {
           .from('cart_items')
           .select()
           .eq('user_id', item.userId)
-          .eq('name_en', item.nameEn) // ⚠️ keep (since your DB has no product_id)
+          .eq('name_en', item.nameEn)
           .maybeSingle();
 
       if (existing != null) {
@@ -30,7 +30,6 @@ class CartService {
 
         return CartModel.fromMap(updated);
       } else {
-        // ✅ ensure user_id is always sent
         final inserted = await supabase
             .from('cart_items')
             .insert({
@@ -112,6 +111,7 @@ class CartService {
           'price': item['price'],
           'quantity': item['quantity'],
           'total_price': item['total_price'],
+          'Description': item['Description'] ?? '', // ✅ ADDED — was missing
           'customer_name': name,
           'customer_address': address,
           'customer_phone': phone,

@@ -6,7 +6,8 @@ class CartModel {
   final String imageUrl;
   final double price;
   final int quantity;
-  final int stock;
+  final String description; // ✅ ADDED — was missing, exists in Supabase
+  final String stock;
   final double totalPrice;
   final DateTime? createdAt;
 
@@ -18,12 +19,12 @@ class CartModel {
     required this.imageUrl,
     required this.price,
     required this.quantity,
+    required this.description, // ✅ ADDED
     required this.stock,
     required this.totalPrice,
     this.createdAt,
   });
 
-  /// ✅ Added copyWith — helps GetX update UI when quantity/price changes
   CartModel copyWith({
     String? id,
     String? userId,
@@ -32,7 +33,8 @@ class CartModel {
     String? imageUrl,
     double? price,
     int? quantity,
-    int? stock,
+    String? description, // ✅ ADDED
+    String? stock,
     double? totalPrice,
     DateTime? createdAt,
   }) {
@@ -44,6 +46,7 @@ class CartModel {
       imageUrl: imageUrl ?? this.imageUrl,
       price: price ?? this.price,
       quantity: quantity ?? this.quantity,
+      description: description ?? this.description, // ✅ ADDED
       stock: stock ?? this.stock,
       totalPrice: totalPrice ?? this.totalPrice,
       createdAt: createdAt ?? this.createdAt,
@@ -58,6 +61,7 @@ class CartModel {
       'image_url': imageUrl,
       'price': price,
       'quantity': quantity,
+      'Description': description, // ✅ ADDED — capital D matches Supabase column
       'stock': stock,
       'total_price': totalPrice,
     };
@@ -70,13 +74,11 @@ class CartModel {
       nameEn: (map['name_en'] ?? '').toString(),
       nameUr: (map['name_ur'] ?? '').toString(),
       imageUrl: (map['image_url'] ?? '').toString(),
-
-      // ✅ Fixed bug: correct num casting for price, quantity, stock, totalPrice
       price: ((map['price'] ?? 0) as num).toDouble(),
       quantity: ((map['quantity'] ?? 0) as num).toInt(),
-      stock: ((map['stock'] ?? 0) as num).toInt(),
+      description: (map['Description'] ?? '').toString(), // ✅ ADDED — capital D
+      stock: (map['stock'] ?? '') .toString(),
       totalPrice: ((map['total_price'] ?? 0) as num).toDouble(),
-
       createdAt: map['created_at'] != null
           ? DateTime.tryParse(map['created_at'].toString())
           : null,

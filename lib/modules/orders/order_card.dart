@@ -19,9 +19,7 @@ class OrderCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
       elevation: 3,
       shadowColor: colors.shadow.withOpacity(0.2),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(22),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -93,8 +91,10 @@ class OrderCard extends StatelessWidget {
                   _rowItem("Price", "Rs ${order.price}"),
                   _rowItem("Total", "Rs $total", isBold: true),
                   const SizedBox(height: 6),
-                  _rowItem("Date",
-                      order.created_at.toLocal().toString().split(' ')[0]),
+                  _rowItem(
+                    "Date",
+                    order.created_at.toLocal().toString().split(' ')[0],
+                  ),
                 ],
               ),
             ),
@@ -125,10 +125,7 @@ class OrderCard extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   "Reason: ${order.cancel_reason}",
-                  style: TextStyle(
-                    color: colors.error,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: colors.error, fontSize: 12),
                 ),
               ),
 
@@ -214,64 +211,129 @@ class OrderCard extends StatelessWidget {
     );
   }
 
-  /// CANCEL DIALOG
   void _showCancelDialog(BuildContext context) {
     final reasonController = TextEditingController();
     final colors = Theme.of(context).colorScheme;
+    String? selectedReason;
+    bool showOtherField = false;
+
+    final List<String> cancelReasons = [
+      "Changed my mind",
+      "Ordered by mistake",
+      "Found a better price",
+      "Delivery time too long",
+      "Duplicate order",
+      "Other",
+    ];
 
     showDialog(
       context: context,
-      builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Cancel Order",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: reasonController,
-                decoration: InputDecoration(
-                  hintText: "Enter reason...",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+      builder: (_) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Cancel Order",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("Close"),
+                const SizedBox(height: 12),
+
+                // ── Dropdown ──
+                DropdownButtonFormField<String>(
+                  value: selectedReason,
+                  hint: const Text("Select a reason"),
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 14,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: colors.error,
+                  items: cancelReasons
+                      .map(
+                        (reason) => DropdownMenuItem(
+                          value: reason,
+                          child: Text(reason),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedReason = value;
+                      showOtherField = value == "Other";
+                      if (!showOtherField) reasonController.clear();
+                    });
+                  },
+                ),
+
+                // ── "Other" text field (visible only when Other is selected) ──
+                if (showOtherField) ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: reasonController,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      hintText: "Please describe your reason...",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      onPressed: () {
-                        if (reasonController.text.isNotEmpty) {
-                          controller.cancelOrder(
-                              order.id, reasonController.text);
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: const Text("Submit"),
                     ),
                   ),
                 ],
-              ),
-            ],
+
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("Close"),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: colors.error,
+                        ),
+                        onPressed: () {
+                          // Resolve the final reason string
+                          final String? finalReason = selectedReason == "Other"
+                              ? (reasonController.text.trim().isNotEmpty
+                                    ? reasonController.text.trim()
+                                    : null)
+                              : selectedReason;
+
+                          if (finalReason != null && finalReason.isNotEmpty) {
+                            controller.cancelOrder(order.id, finalReason);
+                            Navigator.pop(context);
+                          } else {
+                            // Show inline feedback if nothing is selected/entered
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Please select or enter a reason.",
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        child: const Text("Submit"),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -280,17 +342,15 @@ class OrderCard extends StatelessWidget {
 
   /// EDIT ORDER DIALOG
   void _showEditDialog(BuildContext context) {
-    final quantityController =
-        TextEditingController(text: order.quantity.toString());
-    final priceController =
-        TextEditingController(text: order.price.toString());
+    final quantityController = TextEditingController(
+      text: order.quantity.toString(),
+    );
+    final priceController = TextEditingController(text: order.price.toString());
 
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Column(
@@ -336,12 +396,17 @@ class OrderCard extends StatelessWidget {
                     child: FilledButton(
                       onPressed: () {
                         final newQty =
-                            int.tryParse(quantityController.text) ?? order.quantity;
+                            int.tryParse(quantityController.text) ??
+                            order.quantity;
                         final newPrice =
-                            double.tryParse(priceController.text) ?? order.price;
+                            double.tryParse(priceController.text) ??
+                            order.price;
 
-                        controller.updateOrder(order.id,
-                            quantity: newQty, price: newPrice);
+                        controller.updateOrder(
+                          order.id,
+                          quantity: newQty,
+                          price: newPrice,
+                        );
 
                         Navigator.pop(context);
                       },
