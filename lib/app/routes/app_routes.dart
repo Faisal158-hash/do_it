@@ -1,3 +1,5 @@
+import 'package:do_it/Admin/admin_dashboard.dart';
+import 'package:do_it/Admin/login_view.dart';
 import 'package:do_it/modules/products/confirm_order_wrapper.dart';
 import 'package:do_it/splash/splash_screen.dart';
 import 'package:do_it/modules/home/home_view.dart';
@@ -13,6 +15,8 @@ import 'package:get/get.dart';
 class AppRoutes {
   // Route name constants
   static const splash = '/splash';
+  static const login = '/login';
+  static const admin = '/admin';
   static const home = '/home';
   static const product = '/product';
   static const orders = '/orders';
@@ -25,6 +29,15 @@ class AppRoutes {
     // Splash
     GetPage(name: splash, page: () => SplashView()),
 
+    GetPage(
+  name: login,
+  page: () => LoginView(),
+),
+     GetPage(
+      name: admin,
+      page: () => AdminDashboard(),
+    ),
+
     // Home
     GetPage(
       name: home,
@@ -33,7 +46,7 @@ class AppRoutes {
         Get.put(HomeController());
       }),
     ),
-
+    
     // Products
     GetPage(
       name: product,

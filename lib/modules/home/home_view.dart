@@ -1,5 +1,9 @@
 import 'package:do_it/common/temperature_widget.dart';
 import 'package:do_it/modules/home/banner_card.dart';
+import 'package:do_it/modules/home/crop_page.dart';
+import 'package:do_it/modules/home/equipment_page.dart';
+import 'package:do_it/modules/home/market_page.dart';
+import 'package:do_it/modules/home/rates_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../common/app_header.dart';
@@ -172,22 +176,42 @@ class _HomeViewState extends State<HomeView> {
   }
 
   // ---------------- CATEGORIES ----------------
-  Widget _categoriesSection(BoxConstraints constraints) {
-    return _sectionWrapper(
-      title: 'Categories',
-      child: SizedBox(
-        height: constraints.maxWidth < 600 ? 120 : 140,
-        child: Obx(() {
-          if (homeController.categories.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: homeController.categories.length,
-            itemBuilder: (context, index) {
-              final category = homeController.categories[index];
-              final width = constraints.maxWidth < 600 ? 140.0 : 180.0;
-              return Container(
+ Widget _categoriesSection(BoxConstraints constraints) {
+  // Map category titles to their respective pages
+  final Map<String, Widget Function()> categoryRoutes = {
+    'Market': () => MarketPage(),
+    'Crops': () => CropPage(),
+    'Equipment': () => EquipmentPage(),
+    'Rates': () => RatesPage(),
+  };
+
+  return _sectionWrapper(
+    title: 'Categories',
+    child: SizedBox(
+      height: constraints.maxWidth < 600 ? 120 : 140,
+      child: Obx(() {
+        if (homeController.categories.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: homeController.categories.length,
+          itemBuilder: (context, index) {
+            final category = homeController.categories[index];
+            final width = constraints.maxWidth < 600 ? 140.0 : 180.0;
+            final String title = category['title'] ?? '';
+
+            return GestureDetector(
+              onTap: () {
+                final pageBuilder = categoryRoutes[title];
+                if (pageBuilder != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => pageBuilder()),
+                  );
+                }
+              },
+              child: Container(
                 width: width,
                 margin: const EdgeInsets.only(right: 12),
                 decoration: BoxDecoration(
@@ -202,27 +226,29 @@ class _HomeViewState extends State<HomeView> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 6,
-                        offset: const Offset(0, 4)),
+                      color: Colors.black12,
+                      blurRadius: 6,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
                 child: Center(
                   child: Text(
-                    category['title'] ?? '',
+                    title,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              );
-            },
-          );
-        }),
-      ),
-    );
-  }
+              ),
+            );
+          },
+        );
+      }),
+    ),
+  );
+}
 
   // ---------------- FEATURED PRODUCTS ----------------
   Widget _featuredProducts(BoxConstraints constraints) {
