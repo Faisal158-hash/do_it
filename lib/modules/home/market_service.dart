@@ -23,7 +23,7 @@ class MarketService {
   }
 
   // 📈 realtime stream
-  Stream<List<Map<String, dynamic>>> marketStream() {
+  Stream<List<Map<String, dynamic>>> marketStream(String? s) {
     return supabase
         .from('market_prices')
         .stream(primaryKey: ['id']);

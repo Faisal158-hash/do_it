@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class LoginController extends GetxController {
+class AdminLoginController extends GetxController {
   final SupabaseClient supabase = Supabase.instance.client;
   final box = GetStorage();
 
@@ -20,30 +20,27 @@ class LoginController extends GetxController {
         password: password.value.trim(),
       );
 
-      if (res.user == null) {
-        Get.snackbar("Error", "Invalid login");
+      final user = res.user;
+
+      if (user == null) {
+        Get.snackbar("Error", "Invalid login credentials");
         return;
       }
 
-      final userId = res.user!.id;
+      // ✅ store auth data only
+      box.write('userId', user.id);
+      box.write('email', user.email);
 
-      final data = await supabase
-          .from('Admin_Profile')
-          .select('role')
-          .eq('id', userId)
-          .single();
-
-      String role = data['role'];
-
-      box.write('role', role);
-
-      // ROUTING
-      if (role == 'admin') {
+      // 🔥 TEMP LOGIC: admin check via email (since no table now)
+      if (user.email == 'admin@gmail.com') {
+        box.write('role', 'admin');
         Get.offAllNamed(AppRoutes.admin);
       } else {
+        box.write('role', 'user');
         Get.offAllNamed(AppRoutes.home);
       }
-
+    } on AuthException catch (e) {
+      Get.snackbar("Login Failed", e.message);
     } catch (e) {
       Get.snackbar("Error", e.toString());
     } finally {

@@ -1,15 +1,22 @@
+import 'dart:async';
 import 'package:do_it/common/temperature_widget.dart';
 import 'package:do_it/modules/home/banner_card.dart';
 import 'package:do_it/modules/home/crop_page.dart';
 import 'package:do_it/modules/home/equipment_page.dart';
 import 'package:do_it/modules/home/market_page.dart';
+import 'package:do_it/modules/home/organic_search.dart';
 import 'package:do_it/modules/home/rates_page.dart';
+import 'package:do_it/modules/home/rice_offers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../common/app_header.dart';
 import '../../common/app_footer.dart';
 import '../../common/date_time_widget.dart';
 import 'home_controller.dart';
+
+// NEW PAGES
+import 'subsidy_page.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -20,26 +27,79 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   late HomeController homeController;
-  late final PageController _bannerController;
+  late PageController _bannerController;
+
+  Timer? _bannerTimer;
+  int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
 
-    // Use singleton controller
-    if (Get.isRegistered<HomeController>()) {
-      homeController = Get.find<HomeController>();
-    } else {
-      homeController = Get.put(HomeController(), permanent: true);
-    }
-
-    // Local PageController for banner slider only
+    homeController = Get.find<HomeController>();
     _bannerController = PageController();
+
+    // 🔥 WELCOME POPUP
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        showDialog(
+          context: context,
+          builder: (_) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                ),
+              ),
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.agriculture, size: 50, color: Colors.white),
+                  SizedBox(height: 10),
+                  Text(
+                    "Welcome to Kisan Traders",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "Live market rates & farming solutions",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      });
+    });
+
+    // 🔥 AUTO SLIDER
+    _bannerTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (!mounted || homeController.banners.isEmpty) return;
+
+      _currentPage++;
+      if (_currentPage >= homeController.banners.length) {
+        _currentPage = 0;
+      }
+
+      _bannerController.animateToPage(
+        _currentPage,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   @override
   void dispose() {
-    _bannerController.dispose(); // Dispose only local controller
+    _bannerTimer?.cancel();
+    _bannerController.dispose();
     super.dispose();
   }
 
@@ -52,282 +112,110 @@ class _HomeViewState extends State<HomeView> {
         ordersCount: 0,
       ),
       bottomNavigationBar: const AppFooter(),
-      backgroundColor: const Color(0xFFF5F5F5),
       body: Stack(
         children: [
           RefreshIndicator(
             onRefresh: () async => homeController.refreshData(),
-            child: LayoutBuilder(builder: (context, constraints) {
-              final isMobile = constraints.maxWidth < 600;
-              final horizontalPadding = isMobile ? 12.0 : 24.0;
-              final sectionSpacing = isMobile ? 24.0 : 40.0;
-
-              return SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-                    _searchBar(context),
-                    SizedBox(height: sectionSpacing),
-                    _bannerSlider(constraints),
-                    SizedBox(height: sectionSpacing),
-                    _platformIntro(),
-                    SizedBox(height: sectionSpacing),
-                    _categoriesSection(constraints),
-                    SizedBox(height: sectionSpacing),
-                    _featuredProducts(constraints),
-                    SizedBox(height: sectionSpacing),
-                    _marketRates(),
-                    SizedBox(height: sectionSpacing),
-                    _testimonials(constraints),
-                    SizedBox(height: sectionSpacing),
-                    _blogNews(constraints),
-                    SizedBox(height: sectionSpacing * 2),
-                  ],
-                ),
-              );
-            }),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  _bannerSlider(),
+                  const SizedBox(height: 20),
+                  _categories(),
+                  const SizedBox(height: 20),
+                  LayoutBuilder(
+                    builder: (context, constraints) => _testimonials(constraints),
+                  ),
+                  const SizedBox(height: 20),
+                  _blogNews(),
+                ],
+              ),
+            ),
           ),
+
           Positioned(bottom: 120, right: 20, child: TemperatureWidget()),
           const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
       ),
     );
   }
+  
 
-  // ---------------- SEARCH BAR ----------------
-  Widget _searchBar(BuildContext context) {
-    return Center(
-      child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.5,
-        child: TextField(
-          decoration: InputDecoration(
-            hintText: 'Search crops, markets, services...',
-            prefixIcon: const Icon(Icons.search),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding:
-                const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ---------------- BANNER SLIDER ----------------
-  Widget _bannerSlider(BoxConstraints constraints) {
-    final height = constraints.maxWidth < 600 ? 200.0 : 250.0;
-    return SizedBox(
-      height: height,
-      child: Obx(() {
-        if (homeController.banners.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return PageView.builder(
-          controller: _bannerController, // use local controller
+  // ---------------- BANNER ----------------
+  Widget _bannerSlider() {
+    return Obx(() {
+      return SizedBox(
+        height: 200,
+        child: PageView.builder(
+          controller: _bannerController,
           itemCount: homeController.banners.length,
-          onPageChanged: homeController.onPageChanged,
           itemBuilder: (context, index) {
-            final banner = homeController.banners[index];
-            final imageUrl = banner['image_url'] ?? '';
+            final b = homeController.banners[index];
             return BannerCard(
-              image: imageUrl.isNotEmpty
-                  ? imageUrl
-                  : 'assets/images/placeholder_banner.jpg',
-              title: banner['title'] ?? 'Kisan Traders',
-              subtitle: banner['subtitle'] ?? '',
+              image: b['image_url'] ?? '',
+              title: b['title'] ?? '',
+              subtitle: b['subtitle'] ?? '',
             );
           },
-        );
-      }),
-    );
-  }
-
-  // ---------------- PLATFORM INTRO ----------------
-  Widget _platformIntro() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
         ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black12, blurRadius: 10, offset: const Offset(0, 5)),
-        ],
-      ),
-      child: const Text(
-        'Kisan Traders connects farmers, markets, and consumers.',
-        style: TextStyle(color: Colors.white, fontSize: 16),
-      ),
-    );
+      );
+    });
   }
+  
 
   // ---------------- CATEGORIES ----------------
- Widget _categoriesSection(BoxConstraints constraints) {
-  // Map category titles to their respective pages
-  final Map<String, Widget Function()> categoryRoutes = {
-    'Market': () => MarketPage(),
-    'Crops': () => CropPage(),
-    'Equipment': () => EquipmentPage(),
-    'Rates': () => RatesPage(),
-  };
+  Widget _categories() {
+    final routes = {
+      'Market': MarketPage(),
+      'Crops': CropPage(),
+      'Equipment': EquipmentListPage(),
+      'Rates': RatesPage(),
+    };
 
-  return _sectionWrapper(
-    title: 'Categories',
-    child: SizedBox(
-      height: constraints.maxWidth < 600 ? 120 : 140,
-      child: Obx(() {
-        if (homeController.categories.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return ListView.builder(
+    return Obx(() {
+      return SizedBox(
+        height: 120,
+        child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: homeController.categories.length,
           itemBuilder: (context, index) {
-            final category = homeController.categories[index];
-            final width = constraints.maxWidth < 600 ? 140.0 : 180.0;
-            final String title = category['title'] ?? '';
+            final c = homeController.categories[index];
+            final title = c['title'] ?? '';
 
-            return GestureDetector(
-              onTap: () {
-                final pageBuilder = categoryRoutes[title];
-                if (pageBuilder != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => pageBuilder()),
-                  );
-                }
-              },
-              child: Container(
-                width: width,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(int.tryParse(category['gradient_start'] ?? '') ??
-                          0xFF4CAF50),
-                      Color(int.tryParse(category['gradient_end'] ?? '') ??
-                          0xFF81C784),
-                    ],
+            return MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () {
+                  if (routes.containsKey(title)) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => routes[title]!),
+                    );
+                  }
+                },
+                child: Container(
+                  width: 160,
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 6,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                  child: Center(
+                    child: Text(
+                      title,
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
               ),
             );
           },
-        );
-      }),
-    ),
-  );
-}
-
-  // ---------------- FEATURED PRODUCTS ----------------
-  Widget _featuredProducts(BoxConstraints constraints) {
-    return _sectionWrapper(
-      title: 'Featured Crops',
-      child: SizedBox(
-        height: constraints.maxWidth < 600 ? 180 : 200,
-        child: Obx(() {
-          if (homeController.featuredProducts.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final itemWidth = constraints.maxWidth < 600 ? 140.0 : 180.0;
-          return ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: homeController.featuredProducts.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final product = homeController.featuredProducts[index];
-              return Container(
-                width: itemWidth,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 6,
-                        offset: const Offset(0, 4)),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.agriculture, size: 40, color: Colors.green),
-                    const SizedBox(height: 8),
-                    Text(product['name'] ?? '',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text("Rs. ${product['price']}",
-                        style: const TextStyle(color: Colors.green)),
-                  ],
-                ),
-              );
-            },
-          );
-        }),
-      ),
-    );
-  }
-
-  // ---------------- MARKET RATES ----------------
-  Widget _marketRates() {
-    return _sectionWrapper(
-      title: 'Today Market Rates',
-      child: Obx(() {
-        if (homeController.marketRates.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return Column(
-          children: homeController.marketRates.map((rate) {
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 6),
-              elevation: 3,
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ListTile(
-                leading: const Icon(Icons.trending_up, color: Colors.green),
-                title: Text(rate['crop_name'] ?? ''),
-                trailing: Text(
-                  "Rs. ${rate['price']}",
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            );
-          }).toList(),
-        );
-      }),
-    );
+        ),
+      );
+    });
   }
 
   // ---------------- TESTIMONIALS ----------------
@@ -394,79 +282,115 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  // ---------------- BLOG ----------------
-  Widget _blogNews(BoxConstraints constraints) {
-    final width = constraints.maxWidth < 600 ? 220.0 : 250.0;
-    final height = constraints.maxWidth < 600 ? 180.0 : 200.0;
+    // ---------------- BLOG ----------------
+    Widget _blogNews() {
+      final width = MediaQuery.of(context).size.width < 600 ? 220.0 : 250.0;
+      final height = MediaQuery.of(context).size.width < 600 ? 180.0 : 200.0;
 
-    return _sectionWrapper(
-      title: 'Agriculture News',
-      child: Obx(() {
-        if (homeController.blogs.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return SizedBox(
-          height: height,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: homeController.blogs.length,
-            itemBuilder: (context, index) {
-              final blog = homeController.blogs[index];
-              return Container(
-                width: width,
-                margin: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  color: Colors.green.shade300,
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 6,
-                        offset: const Offset(0, 4)),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(16)),
-                        child: Image.network(
-                          blog['image_url'] ?? '',
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.article),
+      return _sectionWrapper(
+        title: 'Agriculture News',
+        child: Obx(() {
+          if (homeController.blogs.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return SizedBox(
+            height: height,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: homeController.blogs.length,
+              itemBuilder: (context, index) {
+                final blog = homeController.blogs[index];
+                final title = (blog['title'] ?? '').toString().toLowerCase();
+
+                return GestureDetector(
+                  onTap: () {
+                    // 🔥 NAVIGATION LOGIC
+
+                    if (title.contains('subsidy')) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SubsidyPage()),
+                      );
+                    } else if (title.contains('organic')) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const OrganicSearchPage(),
                         ),
-                      ),
+                      );
+                    } else if (title.contains('rice')) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RiceOffersPage(),
+                        ),
+                      );
+                    }
+                  },
+                  child: Container(
+                    width: width,
+                    margin: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.green.shade300,
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 6,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Text(blog['title'] ?? '',
-                          maxLines: 2, overflow: TextOverflow.ellipsis),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(16),
+                            ),
+                            child: Image.network(
+                              blog['image_url'] ?? '',
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              errorBuilder: (_, __, ___) =>
+                                  const Icon(Icons.image, size: 40),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            blog['title'] ?? '',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      }),
-    );
-  }
+                  ),
+                );
+              },
+            ),
+          );
+        }),
+      );
+    }
 
-  // ---------------- SECTION WRAPPER ----------------
-  Widget _sectionWrapper({required String title, required Widget child}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Column(
+    Widget _sectionWrapper({required String title, required Widget child}) {
+      return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
           child,
         ],
-      ),
-    );
+      );
+    }
   }
-}

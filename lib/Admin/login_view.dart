@@ -1,11 +1,11 @@
+import 'package:do_it/Admin/login_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'login_controller.dart';
 
 class LoginView extends StatelessWidget {
   LoginView({super.key});
 
-  final controller = Get.put(LoginController());
+  final controller = Get.put(AdminLoginController());
 
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();

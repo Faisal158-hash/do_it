@@ -1,9 +1,10 @@
 import 'package:do_it/modules/auth/auth_controller.dart';
+import 'package:do_it/modules/home/market_controller.dart';
 import 'package:flutter/material.dart';
-// ignore: depend_on_referenced_packages
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:do_it/app/bindings/initial_binding.dart';
 import 'package:do_it/app/routes/app_routes.dart';
 
@@ -20,9 +21,19 @@ Future<void> main() async {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocnV3cm95a3duY2Z2YWZwem9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4MDMwNTUsImV4cCI6MjA4NDM3OTA1NX0.e0lbbBhjSiwHpcgoGJpuFH1x3VnBDB_a1sueLrE4LRw',
   );
 
+  // GetX controller (unchanged)
   Get.put(AuthController());
 
-  runApp(const KisanTradersApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => MarketController(),
+        ),
+      ],
+      child: const KisanTradersApp(),
+    ),
+  );
 }
 
 class KisanTradersApp extends StatelessWidget {
@@ -40,7 +51,9 @@ class KisanTradersApp extends StatelessWidget {
 
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E7D32)),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2E7D32),
+        ),
       ),
     );
   }

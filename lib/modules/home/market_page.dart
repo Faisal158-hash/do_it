@@ -7,14 +7,14 @@ class MarketPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Provider.of<MarketController>(context);
+    final controller = context.read<MarketController>();
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
 
       appBar: AppBar(
         title: const Text("Market Prices"),
-        backgroundColor: Colors.green[700],
+        backgroundColor: Colors.green,
       ),
 
       body: Column(
@@ -23,19 +23,24 @@ class MarketPage extends StatelessWidget {
           // 📍 CITY FILTER
           Padding(
             padding: const EdgeInsets.all(12),
-            child: DropdownButtonFormField(
+            child: DropdownButtonFormField<String>(
               value: controller.selectedCity.isEmpty
                   ? null
                   : controller.selectedCity,
-              items: ["Lahore", "Multan", "Faisalabad"]
-                  .map((city) => DropdownMenuItem(
-                        value: city,
-                        child: Text(city),
-                      ))
+
+              items: const ["Lahore", "Multan", "Faisalabad"]
+                  .map(
+                    (city) => DropdownMenuItem(
+                      value: city,
+                      child: Text(city),
+                    ),
+                  )
                   .toList(),
+
               onChanged: (value) {
                 controller.setCity(value ?? "");
               },
+
               decoration: const InputDecoration(
                 labelText: "Select City",
                 border: OutlineInputBorder(),
@@ -43,13 +48,20 @@ class MarketPage extends StatelessWidget {
             ),
           ),
 
-          // 📊 LIVE DATA
+          // 📊 LIVE STREAM (FIXED)
           Expanded(
-            child: StreamBuilder(
-              stream: controller.realtime(),
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: controller.marketStreamFiltered(),
+
               builder: (context, snapshot) {
-                if (!snapshot.hasData) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(
+                    child: Text("No market data available"),
+                  );
                 }
 
                 final data = snapshot.data!;
@@ -61,7 +73,10 @@ class MarketPage extends StatelessWidget {
 
                     return Card(
                       margin: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+
                       child: ListTile(
                         leading: Icon(
                           item['trend'] == 'up'
@@ -71,12 +86,16 @@ class MarketPage extends StatelessWidget {
                               ? Colors.green
                               : Colors.red,
                         ),
-                        title: Text(item['crop_name']),
-                        subtitle: Text(item['city']),
+
+                        title: Text(item['crop_name'] ?? ""),
+
+                        subtitle: Text(item['city'] ?? ""),
+
                         trailing: Text(
-                          "Rs ${item['price']}",
+                          "Rs ${item['price'] ?? 0}",
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold),
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     );
