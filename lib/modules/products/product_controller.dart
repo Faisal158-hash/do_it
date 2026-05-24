@@ -9,7 +9,7 @@ class ProductController extends ChangeNotifier {
     'animal_feeds': 'Animal Feeds / جانوروں کے لیے خوراک',
     'fertilizers': 'Fertilizers / کھادیں',
     'seeds': 'Seeds / بیج',
-    'farming_tools': 'Farming Tools / زرعی آلات',
+    'farming_tools': 'Farming Tools/ زرعی آلات',
   };
 
   // 🔹 Mapping Supabase values → internal keys

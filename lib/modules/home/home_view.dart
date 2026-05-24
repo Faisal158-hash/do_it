@@ -168,56 +168,82 @@ class _HomeViewState extends State<HomeView> {
   
 
   // ---------------- CATEGORIES ----------------
-  Widget _categories() {
-    final routes = {
-      'Market': MarketPage(),
-      'Crops': CropPage(),
-      'Equipment': EquipmentListPage(),
-      'Rates': RatesPage(),
-    };
+  // ---------------- CATEGORIES ----------------
+Widget _categories() {
+  final routes = {
+    'Market': MarketPage(),
+    'Crops': CropPage(),
+    'Equipment': EquipmentListPage(),
+    'Rates': RatesPage(),
+  };
 
-    return Obx(() {
-      return SizedBox(
-        height: 120,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: homeController.categories.length,
-          itemBuilder: (context, index) {
-            final c = homeController.categories[index];
-            final title = c['title'] ?? '';
+  final categoryMeta = {
+    'Market': _CategoryMeta(
+      icon: Icons.storefront_rounded,
+      gradientStart: const Color(0xFF2E7D32),
+      gradientEnd: const Color(0xFF66BB6A),
+      accent: const Color(0xFFA5D6A7),
+      label: 'Buy & Sell',
+    ),
+    'Crops': _CategoryMeta(
+      icon: Icons.grass_rounded,
+      gradientStart: const Color(0xFF558B2F),
+      gradientEnd: const Color(0xFF9CCC65),
+      accent: const Color(0xFFCCFF90),
+      label: 'Your Farm',
+    ),
+    'Equipment': _CategoryMeta(
+      icon: Icons.agriculture_rounded,
+      gradientStart: const Color(0xFF1B5E20),
+      gradientEnd: const Color(0xFF43A047),
+      accent: const Color(0xFFB9F6CA),
+      label: 'Tools & Gear',
+    ),
+    'Rates': _CategoryMeta(
+      icon: Icons.trending_up_rounded,
+      gradientStart: const Color(0xFF33691E),
+      gradientEnd: const Color(0xFF7CB342),
+      accent: const Color(0xFFCCFF90),
+      label: 'Live Prices',
+    ),
+  };
 
-            return MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: () {
-                  if (routes.containsKey(title)) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => routes[title]!),
-                    );
-                  }
-                },
-                child: Container(
-                  width: 160,
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Center(
-                    child: Text(
-                      title,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      );
-    });
-  }
+  return Obx(() {
+    return SizedBox(
+      height: 140,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        itemCount: homeController.categories.length,
+        itemBuilder: (context, index) {
+          final c = homeController.categories[index];
+          final title = c['title'] ?? '';
+          final meta = categoryMeta[title] ??
+              _CategoryMeta(
+                icon: Icons.category_rounded,
+                gradientStart: const Color(0xFF2E7D32),
+                gradientEnd: const Color(0xFF66BB6A),
+                accent: const Color(0xFFA5D6A7),
+                label: '',
+              );
+
+          return _AnimatedCategoryCard(
+            title: title,
+            meta: meta,
+            onTap: () {
+              if (routes.containsKey(title)) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => routes[title]!),
+                );
+              }
+            },
+          );
+        },
+      ),
+    );
+  });
+}
 
   // ---------------- TESTIMONIALS ----------------
   Widget _testimonials(BoxConstraints constraints) {
@@ -400,3 +426,227 @@ class _HomeViewState extends State<HomeView> {
       );
     }
   }
+
+  // ─────────────────────────────────────────────
+// Data model for category visual metadata
+// ─────────────────────────────────────────────
+class _CategoryMeta {
+  final IconData icon;
+  final Color gradientStart;
+  final Color gradientEnd;
+  final Color accent;
+  final String label;
+
+  const _CategoryMeta({
+    required this.icon,
+    required this.gradientStart,
+    required this.gradientEnd,
+    required this.accent,
+    required this.label,
+  });
+}
+
+// ─────────────────────────────────────────────
+// Animated card with press scale + shimmer dot
+// ─────────────────────────────────────────────
+class _AnimatedCategoryCard extends StatefulWidget {
+  final String title;
+  final _CategoryMeta meta;
+  final VoidCallback onTap;
+
+  const _AnimatedCategoryCard({
+    required this.title,
+    required this.meta,
+    required this.onTap,
+  });
+
+  @override
+  State<_AnimatedCategoryCard> createState() => _AnimatedCategoryCardState();
+}
+
+class _AnimatedCategoryCardState extends State<_AnimatedCategoryCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnim;
+  late Animation<double> _glowAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 140),
+    );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 0.93).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _glowAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(_) => _controller.forward();
+  void _onTapUp(_) {
+    _controller.reverse();
+    widget.onTap();
+  }
+  void _onTapCancel() => _controller.reverse();
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTapDown: _onTapDown,
+        onTapUp: _onTapUp,
+        onTapCancel: _onTapCancel,
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: _scaleAnim.value,
+              child: child,
+            );
+          },
+          child: Container(
+            width: 148,
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              gradient: LinearGradient(
+                colors: [
+                  widget.meta.gradientStart,
+                  widget.meta.gradientEnd,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.meta.gradientStart.withOpacity(0.45),
+                  blurRadius: 14,
+                  offset: const Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: widget.meta.gradientEnd.withOpacity(0.2),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                // ── Background decorative circle ──
+                Positioned(
+                  top: -18,
+                  right: -18,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.08),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: -10,
+                  left: -10,
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.05),
+                    ),
+                  ),
+                ),
+
+                // ── Main content ──
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Icon chip
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        child: Icon(
+                          widget.meta.icon,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+
+                      // Titles
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                          if (widget.meta.label.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              widget.meta.label,
+                              style: TextStyle(
+                                color: widget.meta.accent.withOpacity(0.85),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Shimmer top-right dot ──
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: widget.meta.accent.withOpacity(0.75),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.meta.accent.withOpacity(0.6),
+                          blurRadius: 6,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

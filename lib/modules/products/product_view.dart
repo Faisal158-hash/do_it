@@ -24,7 +24,7 @@ class _ProductViewState extends State<ProductView> {
     'animal_feeds',
     'seeds',
     'fertilizers',
-    'tools',
+    'farming_tools',
   ];
 
   @override

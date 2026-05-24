@@ -5,7 +5,7 @@ const Map<String, String> categoryNames = {
   "animal_feeds": "Animal Feeds",
   "seeds": "Seeds",
   "fertilizers": "Fertilizers",
-  "farming tools": "Farming Tools", // ✅ fixed from farming_tools
+  "farming_tools": "Farming Tools", 
 };
 
 class CategoryTestPage extends StatelessWidget {
