@@ -468,7 +468,6 @@ class _AnimatedCategoryCardState extends State<_AnimatedCategoryCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnim;
-  late Animation<double> _glowAnim;
 
   @override
   void initState() {
@@ -478,9 +477,6 @@ class _AnimatedCategoryCardState extends State<_AnimatedCategoryCard>
       duration: const Duration(milliseconds: 140),
     );
     _scaleAnim = Tween<double>(begin: 1.0, end: 0.93).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-    _glowAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }

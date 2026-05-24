@@ -10,7 +10,6 @@ import 'package:get/get.dart';
 //  DESIGN TOKENS
 // ─────────────────────────────────────────────────────────────────────────────
 class _T {
-  static const Color forest  = Color(0xFF1B5E20);
   static const Color primary = Color(0xFF2E7D32);
   static const Color mid     = Color(0xFF43A047);
   static const Color light   = Color(0xFF81C784);
