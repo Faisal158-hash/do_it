@@ -1385,6 +1385,7 @@ class _PremiumAddSheetState extends State<_PremiumAddSheet> {
                               ),
                       ),
                     )),
+                    
               ],
             ),
           ),
@@ -1512,6 +1513,7 @@ class _ErrorState extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12)),
               ),
             ),
+            
           ]),
         ),
       );

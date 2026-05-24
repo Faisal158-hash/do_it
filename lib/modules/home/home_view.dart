@@ -39,10 +39,11 @@ class _HomeViewState extends State<HomeView> {
     homeController = Get.find<HomeController>();
     _bannerController = PageController();
 
-    // 🔥 WELCOME POPUP
+    // WELCOME POPUP
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 500), () {
         showDialog(
+          // ignore: use_build_context_synchronously
           context: context,
           builder: (_) => Dialog(
             shape: RoundedRectangleBorder(
@@ -79,7 +80,7 @@ class _HomeViewState extends State<HomeView> {
       });
     });
 
-    // 🔥 AUTO SLIDER
+    //  AUTO SLIDER
     _bannerTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (!mounted || homeController.banners.isEmpty) return;
 
@@ -257,6 +258,8 @@ class _HomeViewState extends State<HomeView> {
                   BoxShadow(
                       color: Colors.black12,
                       blurRadius: 6,
+
+                      
                       offset: const Offset(0, 4)),
                 ],
               ),
@@ -303,71 +306,74 @@ class _HomeViewState extends State<HomeView> {
                 final blog = homeController.blogs[index];
                 final title = (blog['title'] ?? '').toString().toLowerCase();
 
-                return GestureDetector(
-                  onTap: () {
-                    // 🔥 NAVIGATION LOGIC
-
-                    if (title.contains('subsidy')) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SubsidyPage()),
-                      );
-                    } else if (title.contains('organic')) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const OrganicSearchPage(),
-                        ),
-                      );
-                    } else if (title.contains('rice')) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const RiceOffersPage(),
-                        ),
-                      );
-                    }
-                  },
-                  child: Container(
-                    width: width,
-                    margin: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: Colors.green.shade300,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 6,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(16),
-                            ),
-                            child: Image.network(
-                              blog['image_url'] ?? '',
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              errorBuilder: (_, __, ___) =>
-                                  const Icon(Icons.image, size: 40),
+                return MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () {
+                      //  NAVIGATION LOGIC
+                  
+                      if (title.contains('subsidy')) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SubsidyPage()),
+                        );
+                      } else if (title.contains('organic')) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const OrganicSearchPage(),
+                          ),
+                        );
+                      } else if (title.contains('rice')) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const RiceOffersPage(),
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      width: width,
+                      margin: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.green.shade300,
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 6,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(16),
+                              ),
+                              child: Image.network(
+                                blog['image_url'] ?? '',
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                errorBuilder: (_, __, ___) =>
+                                    const Icon(Icons.image, size: 40),
+                              ),
                             ),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Text(
-                            blog['title'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Text(
+                              blog['title'] ?? '',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );

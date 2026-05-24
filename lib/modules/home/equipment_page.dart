@@ -1,3 +1,5 @@
+import 'package:do_it/common/date_time_widget.dart';
+import 'package:do_it/common/temperature_widget.dart';
 import 'package:do_it/modules/home/equipment_logic.dart';
 import 'package:flutter/material.dart';
 
@@ -51,6 +53,9 @@ class _EquipmentListPageState extends State<EquipmentListPage> {
           Expanded(
             child: _EquipmentListView(items: _filtered),
           ),
+          // ✅ Bottom Right Widgets (Proper Alignment)
+          Positioned(bottom: 120, right: 20, child: TemperatureWidget()),
+          const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
       ),
     );

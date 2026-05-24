@@ -337,6 +337,10 @@ class _CardBottom extends StatelessWidget {
           // High / Low
           _HighLow(label: 'H', value: crop.high, color: kGreenPrimary),
           _HighLow(label: 'L', value: crop.low, color: kRedAlert),
+
+          // ✅ Bottom Right Widgets (Proper Alignment)
+          Positioned(bottom: 120, right: 20, child: TemperatureWidget()),
+          const Positioned(bottom: 20, right: 20, child: DateTimeWidget()),
         ],
       ),
     );
