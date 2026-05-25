@@ -250,60 +250,42 @@ Widget _categories() {
     final testimonials = [
       {
         "name": "Farmer Ali",
-        "text": "Kisan Traders helped me sell crops at better prices."
+        "text": "Kisan Traders helped me sell crops at better prices.",
+        "role": "Wheat Grower",
+        "rating": 5,
       },
       {
         "name": "Farmer Sana",
-        "text": "I got real-time market rates and sold my wheat profitably."
+        "text": "I got real-time market rates and sold my wheat profitably.",
+        "role": "Rice Farmer",
+        "rating": 5,
       },
       {
         "name": "Farmer Bilal",
-        "text": "The platform is easy to use and very reliable."
+        "text": "The platform is easy to use and very reliable.",
+        "role": "Vegetable Grower",
+        "rating": 4,
       },
     ];
 
-    final width = constraints.maxWidth < 600 ? 250.0 : 300.0;
-    final height = constraints.maxWidth < 600 ? 180.0 : 200.0;
+    final isMobile = constraints.maxWidth < 600;
+    final cardWidth = isMobile ? 260.0 : 310.0;
+    final cardHeight = isMobile ? 210.0 : 230.0;
 
     return _sectionWrapper(
       title: 'Success Stories',
       child: SizedBox(
-        height: height,
+        height: cardHeight,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
           itemCount: testimonials.length,
           itemBuilder: (context, index) {
-            return Container(
-              width: width,
-              margin: const EdgeInsets.all(12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: Colors.green.shade400,
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 6,
-
-                      
-                      offset: const Offset(0, 4)),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(testimonials[index]['text']!,
-                        style: const TextStyle(color: Colors.white)),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Text("- ${testimonials[index]['name']!}",
-                        style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
+            return _TestimonialCard(
+              testimonial: testimonials[index],
+              width: cardWidth,
+              height: cardHeight,
+              index: index,
             );
           },
         ),
@@ -425,6 +407,8 @@ Widget _categories() {
         ],
       );
     }
+
+  
   }
 
   // ─────────────────────────────────────────────
@@ -462,6 +446,239 @@ class _AnimatedCategoryCard extends StatefulWidget {
 
   @override
   State<_AnimatedCategoryCard> createState() => _AnimatedCategoryCardState();
+}
+
+// -------- Testimonial Card Widget (place outside main class or as inner class) --------
+class _TestimonialCard extends StatefulWidget {
+  final Map<String, dynamic> testimonial;
+  final double width;
+  final double height;
+  final int index;
+
+  const _TestimonialCard({
+    required this.testimonial,
+    required this.width,
+    required this.height,
+    required this.index,
+  });
+
+  @override
+  State<_TestimonialCard> createState() => _TestimonialCardState();
+}
+
+class _TestimonialCardState extends State<_TestimonialCard>
+    with TickerProviderStateMixin {          // ← TickerProviderStateMixin (was Single...)
+
+  // ── Controller 1: one-shot entrance fade+slide ──
+  late AnimationController _entranceCtrl;
+  late Animation<double>   _fadeAnim;
+  late Animation<Offset>   _slideAnim;
+
+  // ── Controller 2: hover scale only ──
+  late AnimationController _hoverCtrl;
+  late Animation<double>   _scaleAnim;
+
+  bool _isHovered = false;
+
+  static const List<List<Color>> _gradients = [
+    [Color(0xFF2E7D32), Color(0xFF66BB6A)],
+    [Color(0xFF388E3C), Color(0xFF81C784)],
+    [Color(0xFF1B5E20), Color(0xFF43A047)],
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // ── Entrance: fade + slide up, plays once ──
+    _entranceCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _entranceCtrl, curve: Curves.easeOut),
+    );
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.18),   // starts slightly below
+      end:   Offset.zero,
+    ).animate(CurvedAnimation(parent: _entranceCtrl, curve: Curves.easeOut));
+
+    // staggered entrance — card stays visible afterwards
+    Future.delayed(Duration(milliseconds: 140 * widget.index), () {
+      if (mounted) _entranceCtrl.forward();
+    });
+
+    // ── Hover: scale only, toggles back and forth ──
+    _hoverCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _hoverCtrl, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _entranceCtrl.dispose();
+    _hoverCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onHoverChange(bool hovering) {
+    setState(() => _isHovered = hovering);
+    // only drives scale — fade is untouched
+    hovering ? _hoverCtrl.forward() : _hoverCtrl.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final gradient = _gradients[widget.index % _gradients.length];
+    final int rating = widget.testimonial['rating'] as int;
+
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: SlideTransition(
+        position: _slideAnim,
+        child: ScaleTransition(
+          scale: _scaleAnim,
+          child: MouseRegion(
+            onEnter: (_) => _onHoverChange(true),
+            onExit:  (_) => _onHoverChange(false),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width:  widget.width,
+              height: widget.height,
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                gradient: LinearGradient(
+                  colors: gradient,
+                  begin: Alignment.topLeft,
+                  end:   Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color:     gradient[0].withOpacity(_isHovered ? 0.55 : 0.28),
+                    blurRadius: _isHovered ? 22 : 10,
+                    offset:    const Offset(0, 6),
+                  ),
+                ],
+              ),
+              // ── everything inside stays exactly the same ──
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: -6, right: 12,
+                    child: Text(
+                      '\u201C',
+                      style: TextStyle(
+                        fontSize: 90, height: 1,
+                        color: Colors.white.withOpacity(0.12),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        gradient: RadialGradient(
+                          center: Alignment.topLeft, radius: 1.2,
+                          colors: [
+                            Colors.white.withOpacity(0.10),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: List.generate(5, (i) => Icon(
+                            i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                            color: i < rating ? Colors.amber.shade300 : Colors.white30,
+                            size: 16,
+                          )),
+                        ),
+                        const SizedBox(height: 10),
+                        Expanded(
+                          child: Text(
+                            widget.testimonial['text'] as String,
+                            style: const TextStyle(
+                              color: Colors.white, fontSize: 13.5,
+                              height: 1.55, letterSpacing: 0.2,
+                            ),
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Divider(color: Colors.white.withOpacity(0.25), thickness: 0.8),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundColor: Colors.white.withOpacity(0.20),
+                              child: Text(
+                                (widget.testimonial['name'] as String).split(' ').last[0],
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(widget.testimonial['name'] as String,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  )),
+                                Text(widget.testimonial['role'] as String,
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.72),
+                                    fontSize: 11,
+                                  )),
+                              ],
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.18),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: const [
+                                  Icon(Icons.verified_rounded, color: Colors.white, size: 11),
+                                  SizedBox(width: 3),
+                                  Text('Verified', style: TextStyle(color: Colors.white, fontSize: 10)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _AnimatedCategoryCardState extends State<_AnimatedCategoryCard>

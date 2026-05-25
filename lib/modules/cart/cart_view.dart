@@ -15,68 +15,85 @@ class CartPage extends StatelessWidget {
           : Get.put(CartController());
 
   void showCheckoutDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final addressController = TextEditingController();
-    final phoneController = TextEditingController();
+  final nameController = TextEditingController();
+  final addressController = TextEditingController();
+  final phoneController = TextEditingController();
 
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Checkout"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: "Name"),
-            ),
-            TextField(
-              controller: addressController,
-              decoration: const InputDecoration(labelText: "Address"),
-            ),
-            TextField(
-              controller: phoneController,
-              decoration: const InputDecoration(labelText: "Phone"),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              if (nameController.text.trim().isEmpty ||
-                  addressController.text.trim().isEmpty ||
-                  phoneController.text.trim().isEmpty) {
-                Get.snackbar(
-                  "Error",
-                  "Please fill all fields",
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.red.shade100,
-                );
-                return;
-              }
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text("Checkout"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameController,
+            decoration: const InputDecoration(labelText: "Name"),
+          ),
+          TextField(
+            controller: addressController,
+            decoration: const InputDecoration(labelText: "Address"),
+          ),
+          TextField(
+            controller: phoneController,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(labelText: "Phone"),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () async {
+            final name = nameController.text.trim();
+            final address = addressController.text.trim();
+            final phone = phoneController.text.trim();
 
-              // ✅ FIX 2 & 3: Check result BEFORE closing dialog or showing snackbar
-              await controller.placeOrder(
-                name: nameController.text.trim(),
-                address: addressController.text.trim(),
-                phone: phoneController.text.trim(),
+            if (name.isEmpty || address.isEmpty || phone.isEmpty) {
+              Get.snackbar(
+                "Error",
+                "Please fill all fields",
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.red.shade100,
               );
+              return;
+            }
 
-              if (Navigator.canPop(context)) Navigator.pop(context);
+            Get.dialog(
+              const Center(child: CircularProgressIndicator()),
+              barrierDismissible: false,
+            );
 
+            bool result = await controller.placeOrder(
+              name: name,
+              address: address,
+              phone: phone,
+            );
+
+            if (Navigator.canPop(context)) Navigator.pop(context); // close loader
+            if (Navigator.canPop(context)) Navigator.pop(context); // close dialog
+
+            if (result) {
               Get.snackbar(
                 "Success",
                 "Your order has been placed!",
                 snackPosition: SnackPosition.BOTTOM,
                 backgroundColor: Colors.green.shade100,
               );
-            },
-            child: const Text("Place Order"),
-          ),
-        ],
-      ),
-    );
-  }
+            } else {
+              Get.snackbar(
+                "Error",
+                "Order failed. Try again.",
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.red.shade100,
+              );
+            }
+          },
+          child: const Text("Place Order"),
+        ),
+      ],
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -139,26 +156,45 @@ class CartPage extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              "Total Amount:",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              "Rs ${controller.totalPrice.toStringAsFixed(2)}",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ],
-                        ),
+                        child: Column(
+  children: [
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          "Total Amount:",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          "Rs ${controller.totalPrice.toStringAsFixed(2)}",
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.green,
+          ),
+        ),
+      ],
+    ),
+
+    const SizedBox(height: 10),
+
+    SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          showCheckoutDialog(context);
+        },
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+        ),
+        child: const Text("Order Now"),
+      ),
+    ),
+  ],
+)
                       ),
                     );
                   }

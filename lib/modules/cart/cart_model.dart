@@ -6,7 +6,7 @@ class CartModel {
   final String imageUrl;
   final double price;
   final int quantity;
-  final String description; // ✅ ADDED — was missing, exists in Supabase
+  final String description; 
   final String stock;
   final double totalPrice;
   final DateTime? createdAt;
@@ -19,7 +19,7 @@ class CartModel {
     required this.imageUrl,
     required this.price,
     required this.quantity,
-    required this.description, // ✅ ADDED
+    required this.description, 
     required this.stock,
     required this.totalPrice,
     this.createdAt,
@@ -33,7 +33,7 @@ class CartModel {
     String? imageUrl,
     double? price,
     int? quantity,
-    String? description, // ✅ ADDED
+    String? description, 
     String? stock,
     double? totalPrice,
     DateTime? createdAt,
@@ -46,7 +46,7 @@ class CartModel {
       imageUrl: imageUrl ?? this.imageUrl,
       price: price ?? this.price,
       quantity: quantity ?? this.quantity,
-      description: description ?? this.description, // ✅ ADDED
+      description: description ?? this.description, 
       stock: stock ?? this.stock,
       totalPrice: totalPrice ?? this.totalPrice,
       createdAt: createdAt ?? this.createdAt,
@@ -61,7 +61,7 @@ class CartModel {
       'image_url': imageUrl,
       'price': price,
       'quantity': quantity,
-      'Description': description, // ✅ ADDED — capital D matches Supabase column
+      'Description': description, 
       'stock': stock,
       'total_price': totalPrice,
     };
@@ -76,7 +76,7 @@ class CartModel {
       imageUrl: (map['image_url'] ?? '').toString(),
       price: ((map['price'] ?? 0) as num).toDouble(),
       quantity: ((map['quantity'] ?? 0) as num).toInt(),
-      description: (map['Description'] ?? '').toString(), // ✅ ADDED — capital D
+      description: (map['Description'] ?? '').toString(), 
       stock: (map['stock'] ?? '') .toString(),
       totalPrice: ((map['total_price'] ?? 0) as num).toDouble(),
       createdAt: map['created_at'] != null
